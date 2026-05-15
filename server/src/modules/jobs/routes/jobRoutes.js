@@ -14,7 +14,7 @@ const HR_ROLES = ['admin', 'super_admin', 'hr'];
 router.get('/public', jobCtrl.listJobs);
 router.get('/public/:id', jobCtrl.getPublicJob);
 
-// Protected: upload resume for job application (PDF, max 10MB) — must be before /:jobId
+// Public: upload resume for job application or candidate profile (PDF, max 10MB)
 const resumeStorage = new CloudinaryStorage({
   cloudinary,
   params: async () => ({
@@ -24,10 +24,13 @@ const resumeStorage = new CloudinaryStorage({
   }),
 });
 const resumeUpload = multer({ storage: resumeStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-router.post('/upload-resume', protect, resumeUpload.single('resume'), appCtrl.uploadResume);
+router.post('/upload-resume', resumeUpload.single('resume'), appCtrl.uploadResume);
 
-// Protected: submit application (requires registration/login)
-router.post('/:jobId/apply', protect, appCtrl.submitApplication);
+// Public: submit job application (no login required)
+router.post('/:jobId/apply', appCtrl.submitApplication);
+
+// Public: submit general candidate profile
+router.post('/public/submit-profile', jobCtrl.submitProfile);
 
 // Protected
 router.use(protect);

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Briefcase, MapPin, Clock, Globe,
-  Pencil, Trash2, ToggleLeft, ToggleRight, XCircle,
+  Pencil, Trash2, ToggleLeft, ToggleRight, XCircle, Share2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/lib/api';
@@ -88,6 +88,15 @@ export default function JobListingsPage() {
       toast.success('Job closed');
       fetchJobs();
     } catch { toast.error('Failed to close job'); }
+  };
+
+  const shareLink = (job: JobPosting) => {
+    const url = `${process.env.NEXT_PUBLIC_CLIENT_URL || 'https://www.nowazone.com'}/careers/apply/${job._id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Application link copied to clipboard!');
+    }).catch(() => {
+      toast.error('Failed to copy link');
+    });
   };
 
   return (
@@ -249,6 +258,15 @@ export default function JobListingsPage() {
                           </button>
                         </>
                       )}
+                      <button
+                        onClick={() => shareLink(job)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border cursor-pointer transition-all hover:bg-[var(--accent-subtle)]"
+                        style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                        title="Copy application link"
+                      >
+                        <Share2 size={14} />
+                        Share Link
+                      </button>
                       <Link
                         href={`/dashboard/hr/recruitment/jobs/${job._id}/edit`}
                         className="p-2 rounded-xl border transition-all hover:bg-[var(--surface-muted)]"

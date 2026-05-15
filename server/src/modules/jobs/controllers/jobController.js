@@ -1,5 +1,6 @@
 const Job = require('../models/Job');
 const Application = require('../models/Application');
+const Resume = require('../../hr/models/Resume');
 const { AppError } = require('../../../shared/middleware/errorHandler');
 
 let OpenAI;
@@ -45,6 +46,41 @@ exports.getPublicJob = async (req, res, next) => {
       .select('title department location type experience description requirements responsibilities skills salaryMin salaryMax currency');
     if (!job) return next(new AppError('Job not found or not accepting applications', 404));
     res.json({ status: 'success', data: { job } });
+  } catch (err) { next(err); }
+};
+
+/** Public: submit candidate profile */
+exports.submitProfile = async (req, res, next) => {
+  try {
+    const { applicantName, email, phone, skills, experience, notes, resumeUrl } = req.body;
+    
+    if (!applicantName || !email) {
+      return next(new AppError('Name and email are required', 400));
+    }
+
+    const resume = await Resume.create({
+      applicantName,
+      email,
+      phone,
+      skills,
+      experience,
+      notes,
+      fileUrl: resumeUrl,
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to('hr').emit('notification', {
+        type: 'new_profile',
+        data: {
+          id: resume._id,
+          applicantName: resume.applicantName,
+          email: resume.email,
+        },
+      });
+    }
+
+    res.status(201).json({ status: 'success', data: { resume } });
   } catch (err) { next(err); }
 };
 

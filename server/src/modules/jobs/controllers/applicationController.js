@@ -67,7 +67,7 @@ exports.submitApplication = async (req, res, next) => {
     if (!job || job.status !== 'active') return next(new AppError('Job not found or not accepting applications', 404));
 
     const user = req.user;
-    const email = (req.body.applicantEmail || user.email || '').toLowerCase().trim();
+    const email = (req.body.applicantEmail || (user && user.email) || '').toLowerCase().trim();
     if (!email) return next(new AppError('Email is required', 400));
 
     const duplicate = await Application.findOne({ job: req.params.jobId, applicantEmail: email });
@@ -78,9 +78,9 @@ exports.submitApplication = async (req, res, next) => {
     const payload = {
       ...req.body,
       job: req.params.jobId,
-      applicantName: req.body.applicantName || user.name,
+      applicantName: req.body.applicantName || (user && user.name),
       applicantEmail: email,
-      applicant: user._id,
+      applicant: user ? user._id : undefined,
       ipAddress: req.ip,
     };
 
