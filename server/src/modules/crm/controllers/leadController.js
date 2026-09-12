@@ -4,8 +4,8 @@ const { invalidateDashboardCache } = require('../../../shared/services/dashboard
 class LeadController {
   async getLeads(req, res, next) {
     try {
-      const { page = 1, limit = 10, status, assignedTo, followUpDue } = req.query;
-      const leads = await leadService.getLeads({ page, limit, status, assignedTo, followUpDue });
+      const { page = 1, limit = 10, status, assignedTo, followUpDue, search } = req.query;
+      const leads = await leadService.getLeads({ page, limit, status, assignedTo, followUpDue, search });
       
       res.status(200).json({
         status: 'success',

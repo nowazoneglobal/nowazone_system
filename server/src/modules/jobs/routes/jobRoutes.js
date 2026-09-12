@@ -1,33 +1,31 @@
 const express = require('express');
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const { cloudinary } = require('../../../shared/config/cloudinary');
 const jobCtrl = require('../controllers/jobController');
 const appCtrl = require('../controllers/applicationController');
 const { protect, restrictTo } = require('../../../shared/middleware/auth');
+const { AppError } = require('../../../shared/middleware/errorHandler');
+const { createRateLimiter } = require('../../../shared/middleware/rateLimiter');
 
 const router = express.Router();
 
 const HR_ROLES = ['admin', 'super_admin', 'hr'];
 
 // Public: view active jobs + get single job for apply page
-router.get('/public', jobCtrl.listJobs);
+router.get('/public', jobCtrl.listPublicJobs);
 router.get('/public/:id', jobCtrl.getPublicJob);
 
 // Public: upload resume for job application or candidate profile (PDF, max 10MB)
-const resumeStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async () => ({
-    folder: 'jobs/resumes',
-    resource_type: 'raw',
-    allowed_formats: ['pdf'],
-  }),
+const publicLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
+const resumeUpload = multer({
+  storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(file.mimetype === 'application/pdf' && /\.pdf$/i.test(file.originalname) ? null : new AppError('Please upload a PDF resume', 400), true),
 });
-const resumeUpload = multer({ storage: resumeStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-router.post('/upload-resume', resumeUpload.single('resume'), appCtrl.uploadResume);
+router.post('/upload-resume', publicLimiter, (req, res, next) => {
+  resumeUpload.single('resume')(req, res, error => next(error ? new AppError(error.code === 'LIMIT_FILE_SIZE' ? 'Resume must be no larger than 10 MB' : error.message, 400) : undefined));
+}, appCtrl.uploadResume);
 
 // Public: submit job application (no login required)
-router.post('/:jobId/apply', appCtrl.submitApplication);
+router.post('/:jobId/apply', publicLimiter, appCtrl.submitApplication);
 
 // Public: submit general candidate profile
 router.post('/public/submit-profile', jobCtrl.submitProfile);

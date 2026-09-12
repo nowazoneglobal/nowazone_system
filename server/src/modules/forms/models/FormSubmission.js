@@ -12,6 +12,9 @@ const formSubmissionSchema = new mongoose.Schema({
   phone: { type: String },
   company: { type: String },
   message: { type: String },
+  subject: { type: String },
+  requestId: { type: String },
+  requestHash: { type: String },
   formData: { type: mongoose.Schema.Types.Mixed },
   source: { type: String, default: 'website' },
   page: { type: String },
@@ -30,5 +33,6 @@ const formSubmissionSchema = new mongoose.Schema({
 formSubmissionSchema.index({ createdAt: -1 });
 formSubmissionSchema.index({ type: 1, status: 1 });
 formSubmissionSchema.index({ email: 1 });
+formSubmissionSchema.index({ requestId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('FormSubmission', formSubmissionSchema);

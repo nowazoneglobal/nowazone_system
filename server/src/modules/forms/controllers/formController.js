@@ -1,5 +1,8 @@
 const FormSubmission = require('../models/FormSubmission');
-const Lead = require('../../crm/models/Lead');
+const leadService = require('../../crm/services/leadService');
+const schemas = require('../../../shared/schemas/publicSubmissionSchemas');
+const { validate } = require('../../../shared/middleware/validation');
+const { fingerprint, checkReplay, notifyStaff, emitNotifications, sendReceipt } = require('../../../shared/services/publicSubmissionService');
 const CalendarEvent = require('../../calendar/models/CalendarEvent');
 const GoogleCalendarConnection = require('../../calendar/models/GoogleCalendarConnection');
 const { AppError } = require('../../../shared/middleware/errorHandler');
@@ -27,31 +30,70 @@ const contactLimiter = rateLimit({
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-async function createLeadFromSubmission(submission, req) {
-  const lead = await Lead.create({
-    name: submission.name,
-    email: submission.email,
-    phone: submission.phone || '0000000000',
-    company: submission.company || '',
-    source: 'website',
-    status: 'new',
-    metadata: { formType: submission.type, formId: submission._id, page: submission.page },
-  });
-
-  submission.leadId = lead._id;
-  await submission.save();
-
-  const io = req.app.get('io');
-  if (io) {
-    io.to('crm').emit('notification:new', {
-      type: 'new_lead',
-      title: `New ${submission.type} submission`,
-      message: `${submission.name} submitted a ${submission.type} form`,
-      data: { formId: submission._id, leadId: lead._id },
+function submitForm(type, limiter) {
+  return [limiter, validate(schemas[type]), async (req, res, next) => {
+    const data = req.validated;
+    const hash = fingerprint({ type, ...data });
+    let submission;
+    let lead;
+    let notifications = [];
+    let replay = false;
+    try {
+      await FormSubmission.init(); // Ensure the unique retry-key index is ready.
+      // Atlas / a Mongo replica set is required: never report a half-saved form.
+      await FormSubmission.db.transaction(async session => {
+        notifications = [];
+        if (data._requestId) {
+          submission = checkReplay(await FormSubmission.findOne({ requestId: data._requestId }).session(session), hash);
+          if (submission) { replay = true; return; }
+        }
+        const { name, email, phone, company, message, subject, page, _requestId, ...formData } = data;
+        [submission] = await FormSubmission.create([{
+          type, name, email, phone: phone || undefined, company, message, subject, page,
+          formData, requestId: _requestId, requestHash: hash,
+          ipAddress: req.ip, userAgent: (req.headers['user-agent'] || '').slice(0, 1000),
+        }], { session });
+        lead = await leadService.createLead({
+          name, email, phone: phone || undefined, company, source: 'website',
+          metadata: { formType: type, formId: submission._id, page },
+        }, { session, reuseExisting: true });
+        submission.leadId = lead._id;
+        await submission.save({ session });
+        notifications = await notifyStaff(['super_admin', 'admin', 'sales'], {
+          title: subject || `New ${type} submission`,
+          message: `${name} submitted a ${type} form`,
+          type: 'lead', link: '/dashboard/form-submissions',
+          metadata: { formId: submission._id, leadId: lead._id },
+        }, session);
+      });
+    } catch (error) {
+      // A concurrent retry may have committed the same unique request ID.
+      if (error.code === 11000 && data._requestId) {
+        try {
+          submission = checkReplay(await FormSubmission.findOne({ requestId: data._requestId }), hash);
+          if (!submission) return next(error);
+          replay = true;
+        } catch (replayError) { return next(replayError); }
+      } else { return next(error); }
+    }
+    let emailDelivery = 'not_repeated';
+    if (!replay) {
+      // Optional delivery must not turn a committed submission into a failure.
+      try { emitNotifications(req, notifications); } catch {}
+      invalidateDashboardCache().catch(() => {});
+      leadService.syncLead(lead).catch(() => {});
+      if (type === 'appointment') createAppointmentEventAndNotify(submission, req).catch(() => {});
+      const estimate = data.resources
+        ? `\nYour indicative monthly estimate: $${data.listEstimate}; governed estimate: $${data.optimizedEstimate}.\nResources: ${JSON.stringify(data.resources)}\nThese estimates are indicative, not a quote.\n`
+        : '';
+      emailDelivery = await sendReceipt(data.email, 'Your Nowazone request was received',
+        `Hi ${data.name},\n\nWe received your ${type} request. Reference: ${submission._id}.\n${estimate}\nOur team will follow up.\n\nNowazone`);
+    }
+    res.status(replay ? 200 : 201).json({
+      status: 'success', message: 'Request received',
+      data: { id: submission._id, emailDelivery },
     });
-  }
-
-  return lead;
+  }];
 }
 
 /**
@@ -149,18 +191,7 @@ async function createAppointmentEventAndNotify(submission, req) {
       const serviceText = serviceType ? `Service: ${serviceType}\n` : '';
       const linkText = meetingUrl ? `Join link: ${meetingUrl}\n` : '';
       const text = `Hi ${submission.name},\n\nYour appointment request has been received.\n\n${serviceText}Date & time: ${dateString}\n${linkText}\nIf you need to reschedule, please reply to this email.\n\n— NowAZone`;
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto;">
-          <h2 style="color:#0f172a;">Your appointment is scheduled</h2>
-          <p>Hi ${submission.name},</p>
-          <p>Your appointment request has been received and scheduled.</p>
-          ${serviceType ? `<p><strong>Service:</strong> ${serviceType}</p>` : ''}
-          <p><strong>Date &amp; time:</strong> ${dateString}</p>
-          ${meetingUrl ? `<p><strong>Join link:</strong> <a href="${meetingUrl}">${meetingUrl}</a></p>` : ''}
-          <p>If you need to reschedule, just reply to this email.</p>
-        </div>
-      `;
-      emailService.sendMail?.({ to: submission.email, subject: 'Your appointment is scheduled', html, text }).catch(() => {});
+      emailService.sendMail({ to: submission.email, subject: 'Your appointment is scheduled', text }).catch(() => {});
     }
   } catch {
     // Do not block form submission on calendar/email issues
@@ -169,140 +200,10 @@ async function createAppointmentEventAndNotify(submission, req) {
 
 // ─── Public form submission endpoints ───────────────────────────────────────────
 
-exports.submitContact = [
-  contactLimiter,
-  async (req, res, next) => {
-    try {
-      const { name, email, phone, company, message, page } = req.body;
-      if (!name || !email) {
-        return next(new AppError('Name and email are required', 400));
-      }
-
-      const submission = await FormSubmission.create({
-        type: 'contact',
-        name,
-        email,
-        phone,
-        company,
-        message,
-        page,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'] || '',
-      });
-
-      await createLeadFromSubmission(submission, req);
-      invalidateDashboardCache().catch(() => {});
-
-      res.status(201).json({
-        status: 'success',
-        message: 'Contact form submitted successfully',
-        data: { id: submission._id },
-      });
-    } catch (err) { next(err); }
-  },
-];
-
-exports.submitAssessment = [
-  formLimiter,
-  async (req, res, next) => {
-    try {
-      const { name, email, company, businessSize, industry, aiGoals, page, ...rest } = req.body;
-      if (!name || !email) {
-        return next(new AppError('Name and email are required', 400));
-      }
-
-      const submission = await FormSubmission.create({
-        type: 'assessment',
-        name,
-        email,
-        company,
-        page,
-        formData: { businessSize, industry, aiGoals, ...rest },
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'] || '',
-      });
-
-      await createLeadFromSubmission(submission, req);
-      invalidateDashboardCache().catch(() => {});
-
-      res.status(201).json({
-        status: 'success',
-        message: 'Assessment form submitted successfully',
-        data: { id: submission._id },
-      });
-    } catch (err) { next(err); }
-  },
-];
-
-exports.submitAppointment = [
-  formLimiter,
-  async (req, res, next) => {
-    try {
-      const { name, email, phone, company, preferredDate, preferredTime,
-              serviceType, message, page } = req.body;
-      if (!name || !email) {
-        return next(new AppError('Name and email are required', 400));
-      }
-
-      const submission = await FormSubmission.create({
-        type: 'appointment',
-        name,
-        email,
-        phone,
-        company,
-        message,
-        page,
-        formData: { preferredDate, preferredTime, serviceType },
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'] || '',
-      });
-
-      await createLeadFromSubmission(submission, req);
-
-      // Create a calendar event + Google Meet link (when configured) and email the client.
-      createAppointmentEventAndNotify(submission, req).catch(() => {});
-      invalidateDashboardCache().catch(() => {});
-
-      res.status(201).json({
-        status: 'success',
-        message: 'Appointment request submitted successfully',
-        data: { id: submission._id },
-      });
-    } catch (err) { next(err); }
-  },
-];
-
-exports.submitDownload = [
-  formLimiter,
-  async (req, res, next) => {
-    try {
-      const { name, email, company, phone, resourceName, page } = req.body;
-      if (!name || !email) {
-        return next(new AppError('Name and email are required', 400));
-      }
-
-      const submission = await FormSubmission.create({
-        type: 'download',
-        name,
-        email,
-        phone,
-        company,
-        page,
-        formData: { resourceName },
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'] || '',
-      });
-
-      await createLeadFromSubmission(submission, req);
-
-      res.status(201).json({
-        status: 'success',
-        message: 'Download request submitted successfully',
-        data: { id: submission._id },
-      });
-    } catch (err) { next(err); }
-  },
-];
+exports.submitContact = submitForm('contact', contactLimiter);
+exports.submitAssessment = submitForm('assessment', formLimiter);
+exports.submitAppointment = submitForm('appointment', formLimiter);
+exports.submitDownload = submitForm('download', formLimiter);
 
 // ─── Client: my form submissions ────────────────────────────────────────────────
 

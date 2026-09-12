@@ -10,6 +10,9 @@ const getTransporter = () => {
   if (!hasSmtpConfig()) return null;
 
   transporter = nodemailer.createTransport({
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
     secure: Number(process.env.SMTP_PORT) === 465,
@@ -126,6 +129,7 @@ const sendNewsletterEmail = async ({ to, subject, html, text }) =>
   sendMail({ to, subject, html, text });
 
 module.exports = {
+  sendMail,
   sendPasswordResetEmail,
   send2FACodeEmail,
   sendApplicationStatusEmail,

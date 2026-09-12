@@ -2,6 +2,10 @@ const Application = require('../models/Application');
 const Job = require('../models/Job');
 const { AppError } = require('../../../shared/middleware/errorHandler');
 const { onHired } = require('../../../shared/services/jobHiringService');
+const { cloudinary } = require('../../../shared/config/cloudinary');
+const { randomUUID } = require('crypto');
+const { application: applicationSchema } = require('../../../shared/schemas/publicSubmissionSchemas');
+const { fingerprint, checkReplay, notifyStaff, emitNotifications, sendReceipt } = require('../../../shared/services/publicSubmissionService');
 
 exports.listApplications = async (req, res, next) => {
   try {
@@ -34,10 +38,17 @@ exports.getApplication = async (req, res, next) => {
 
 exports.uploadResume = async (req, res, next) => {
   try {
-    if (!req.file || !req.file.path) {
-      return next(new AppError('No resume file uploaded', 400));
+    if (!req.file?.buffer || req.file.buffer.subarray(0, 5).toString() !== '%PDF-') {
+      return next(new AppError('Please upload a valid PDF resume', 400));
     }
-    res.status(200).json({ status: 'success', data: { url: req.file.path } });
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return next(new AppError('Resume uploads are temporarily unavailable. Please try again later.', 503));
+    }
+    const uploaded = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream({ folder: 'jobs/resumes', resource_type: 'raw', public_id: `${randomUUID()}.pdf` }, (error, result) => error ? reject(error) : resolve(result));
+      stream.end(req.file.buffer);
+    });
+    res.status(200).json({ status: 'success', data: { url: uploaded.secure_url } });
   } catch (err) { next(err); }
 };
 
@@ -62,32 +73,53 @@ exports.listMyApplications = async (req, res, next) => {
 };
 
 exports.submitApplication = async (req, res, next) => {
+  let application, job, notifications = [], replay = false;
   try {
-    const job = await Job.findById(req.params.jobId);
-    if (!job || job.status !== 'active') return next(new AppError('Job not found or not accepting applications', 404));
-
-    const user = req.user;
-    const email = (req.body.applicantEmail || (user && user.email) || '').toLowerCase().trim();
-    if (!email) return next(new AppError('Email is required', 400));
-
-    const duplicate = await Application.findOne({ job: req.params.jobId, applicantEmail: email });
-    if (duplicate) {
-      return next(new AppError('You have already applied for this position with this email address.', 409));
+    if (!/^[a-f0-9]{24}$/i.test(req.params.jobId)) throw new AppError('Invalid job ID', 400);
+    const parsed = applicationSchema.safeParse(req.body);
+    if (!parsed.success) throw new AppError(parsed.error.errors.map(error => `${error.path.join('.')}: ${error.message}`).join(', '), 400);
+    const { _requestId, ...payload } = parsed.data;
+    const hash = fingerprint({ jobId: req.params.jobId, ...parsed.data });
+    await Application.init();
+    try {
+      await Application.db.transaction(async session => {
+        notifications = [];
+        if (_requestId) {
+          application = checkReplay(await Application.findOne({ requestId: _requestId }).session(session), hash);
+          if (application) { replay = true; return; }
+        }
+        job = await Job.findById(req.params.jobId).session(session);
+        if (!job || job.status !== 'active' || (job.applicationDeadline && job.applicationDeadline < new Date())) {
+          throw new AppError('Job not found or not accepting applications', 404);
+        }
+        if (await Application.findOne({ job: job._id, applicantEmail: payload.applicantEmail }).session(session)) {
+          throw new AppError('You have already applied for this position with this email address.', 409);
+        }
+        [application] = await Application.create([{
+          ...payload, status: 'new', job: job._id, ipAddress: req.ip,
+          requestId: _requestId, requestHash: hash,
+        }], { session });
+        // Updating the job in the same transaction serializes competing applications.
+        await Job.findByIdAndUpdate(job._id, { $inc: { applicationCount: 1 } }, { session });
+        notifications = await notifyStaff(['super_admin', 'admin', 'hr'], {
+          title: 'New job application', message: `${payload.applicantName} applied for ${job.title}`,
+          type: 'job', link: '/dashboard/hr/recruitment/applications',
+          metadata: { applicationId: application._id, jobId: job._id },
+        }, session);
+      });
+    } catch (error) {
+      if (error.code !== 11000 || !_requestId) throw error;
+      application = checkReplay(await Application.findOne({ requestId: _requestId }), hash);
+      if (!application) throw error;
+      replay = true;
     }
-
-    const payload = {
-      ...req.body,
-      job: req.params.jobId,
-      applicantName: req.body.applicantName || (user && user.name),
-      applicantEmail: email,
-      applicant: user ? user._id : undefined,
-      ipAddress: req.ip,
-    };
-
-    const application = await Application.create(payload);
-
-    await Job.findByIdAndUpdate(req.params.jobId, { $inc: { applicationCount: 1 } });
-    res.status(201).json({ status: 'success', data: { application } });
+    let emailDelivery = 'not_repeated';
+    if (!replay) {
+      try { emitNotifications(req, notifications); } catch {}
+      emailDelivery = await sendReceipt(payload.applicantEmail, 'Your Nowazone application was received',
+        `Hi ${payload.applicantName},\n\nWe received your application for ${job.title}. Reference: ${application._id}. Our team will review it.\n\nNowazone`);
+    }
+    res.status(replay ? 200 : 201).json({ status: 'success', data: { id: application._id, emailDelivery, application: { _id: application._id, applicantName: application.applicantName, applicantEmail: application.applicantEmail, status: application.status } } });
   } catch (err) { next(err); }
 };
 

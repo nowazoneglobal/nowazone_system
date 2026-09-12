@@ -3,7 +3,7 @@ const { AppError } = require('../../../shared/middleware/errorHandler');
 
 exports.subscribe = async (req, res, next) => {
   try {
-    const { email, name, country, tags } = req.body;
+    const { email, name, country, tags } = req.validated;
     const existing = await Subscriber.findOne({ email });
     if (existing) {
       if (existing.status === 'unsubscribed') {
@@ -12,9 +12,7 @@ exports.subscribe = async (req, res, next) => {
       }
       if (name) existing.name = name;
       if (country) existing.country = country;
-      if (Array.isArray(tags) && tags.length) {
-        existing.tags = Array.from(new Set([...(existing.tags || []), ...tags]));
-      }
+      if (tags?.length) existing.tags = Array.from(new Set([...(existing.tags || []), ...tags]));
       await existing.save();
       return res.json({ status: 'success', message: existing.status === 'active' ? 'Resubscribed successfully' : 'Already subscribed' });
     }
@@ -23,7 +21,7 @@ exports.subscribe = async (req, res, next) => {
       email,
       name,
       country: country || undefined,
-      tags: Array.isArray(tags) ? tags : undefined,
+      tags,
       ipAddress: req.ip,
       confirmedAt: new Date(),
     });

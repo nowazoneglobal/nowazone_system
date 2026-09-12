@@ -3,12 +3,14 @@ const ctrl = require('../controllers/subscriberController');
 const campaigns = require('../controllers/campaignController');
 const { protect, restrictTo } = require('../../../shared/middleware/auth');
 const { createRateLimiter } = require('../../../shared/middleware/rateLimiter');
+const { validate } = require('../../../shared/middleware/validation');
+const { subscriber } = require('../../../shared/schemas/publicSubmissionSchemas');
 
 const router = express.Router();
 const subLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5 });
 
 // Public
-router.post('/subscribe',   subLimiter, ctrl.subscribe);
+router.post('/subscribe', subLimiter, validate(subscriber), ctrl.subscribe);
 router.post('/unsubscribe', ctrl.unsubscribe);
 router.get('/campaigns/:id/open.gif', campaigns.trackOpen);
 

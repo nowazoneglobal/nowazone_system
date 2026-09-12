@@ -8,6 +8,8 @@ const applicationSchema = new mongoose.Schema({
   applicantPhone: { type: String },
   resumeUrl: { type: String },
   coverLetter: { type: String },
+  requestId: { type: String },
+  requestHash: { type: String },
   skills: [{ type: String }],
   experience: { type: String },
   currentCompany: { type: String },
@@ -27,5 +29,6 @@ const applicationSchema = new mongoose.Schema({
 
 applicationSchema.index({ job: 1, status: 1 });
 applicationSchema.index({ applicantEmail: 1 });
+applicationSchema.index({ requestId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Application', applicationSchema);

@@ -67,6 +67,7 @@ app.set('trust proxy', process.env.TRUST_PROXY || (process.env.NODE_ENV === 'pro
 const envOrigins = (process.env.CLIENT_URL || 'http://localhost:3000').split(',').map((o) => o.trim());
 const allowedOrigins = Array.from(new Set([
   ...envOrigins,
+  ...(process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173']),
   'https://systems.nowazone.com',
   'https://www.nowazone.com',
   'https://nowazone.com',

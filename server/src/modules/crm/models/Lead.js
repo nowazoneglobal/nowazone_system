@@ -13,7 +13,6 @@ const leadSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, 'Phone is required'],
     match: [/^[\d\s\-\+\(\)]+$/, 'Please provide a valid phone number'],
   },
   company: String,

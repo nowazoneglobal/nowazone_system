@@ -4,8 +4,14 @@ const { AppError } = require('../../../shared/middleware/errorHandler');
 const externalCrm = require('./externalCrmService');
 
 class LeadService {
-  async getLeads({ page, limit, status, assignedTo, followUpDue }) {
+  async getLeads({ page, limit, status, assignedTo, followUpDue, search }) {
+    page = Math.max(parseInt(page, 10) || 1, 1);
+    limit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
     const query = {};
+    if (search) {
+      const literal = String(search).trim().slice(0, 200).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.$or = ['name', 'email', 'company', 'phone'].map(field => ({ [field]: { $regex: literal, $options: 'i' } }));
+    }
     if (status) query.status = status;
     if (assignedTo) query.assignedTo = assignedTo;
     if (followUpDue === 'true' || followUpDue === true) {
@@ -34,23 +40,31 @@ class LeadService {
     };
   }
 
-  async createLead(data) {
-    const existingLead = await Lead.findOne({ email: data.email });
+  async createLead(data, { session = null, reuseExisting = false } = {}) {
+    const existingLead = await Lead.findOne({ email: data.email }).session(session);
     if (existingLead) {
+      if (reuseExisting) return existingLead;
       throw new AppError('Lead with this email already exists', 400);
     }
 
-    const salesReps = await User.find({ role: 'sales', isActive: true });
+    const salesReps = await User.find({ role: 'sales', isActive: true }).session(session);
     if (salesReps.length > 0) {
       const randomRep = salesReps[Math.floor(Math.random() * salesReps.length)];
       data.assignedTo = randomRep._id;
     }
 
-    const lead = await Lead.create(data);
+    const [lead] = await Lead.create([data], { session });
     const populated = await lead.populate('assignedTo', 'name email');
 
+    if (!session) this.syncLead(populated).catch(() => {});
+    return populated;
+  }
+
+  async syncLead(populated) {
+    if (!populated || populated.externalCrm?.syncStatus === 'synced') return;
+
     // Best-effort external CRM sync; never block lead creation on failure.
-    externalCrm.syncLead(populated.toObject())
+    return externalCrm.syncLead(populated.toObject())
       .then((crm) => {
         if (!crm) return;
         return Lead.findByIdAndUpdate(
@@ -81,7 +95,6 @@ class LeadService {
         ).exec().catch(() => {});
       });
 
-    return populated;
   }
 
   async getLeadById(id) {

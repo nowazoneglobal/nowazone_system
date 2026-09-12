@@ -39,6 +39,16 @@ exports.getJob = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+/** Public: active job listings only. Admin listings remain available via listJobs. */
+exports.listPublicJobs = async (req, res, next) => {
+  try {
+    const jobs = await Job.find({ status: 'active' })
+      .select('title department location type experience description requirements responsibilities skills salaryMin salaryMax currency')
+      .sort('-createdAt');
+    res.json({ status: 'success', data: { jobs } });
+  } catch (err) { next(err); }
+};
+
 /** Public: get single active job by ID (for apply page / job detail) */
 exports.getPublicJob = async (req, res, next) => {
   try {
