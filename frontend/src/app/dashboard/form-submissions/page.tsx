@@ -19,6 +19,7 @@ interface FormSubmission {
   phone?: string;
   company?: string;
   message?: string;
+  subject?: string;
   formData?: Record<string, unknown>;
   source: string;
   page?: string;
@@ -591,6 +592,8 @@ export default function FormSubmissionsPage() {
                       </div>
                     </div>
 
+                    {selected.subject && <div className="border rounded-xl p-4"><h3 className="text-xs uppercase mb-2">Subject</h3><p>{selected.subject}</p></div>}
+
                     {/* Message */}
                     {selected.message && (
                       <div
@@ -621,8 +624,8 @@ export default function FormSubmissionsPage() {
                               <span className="text-xs capitalize shrink-0" style={{ color: 'var(--text-muted)' }}>
                                 {key.replace(/([A-Z])/g, ' $1').trim()}
                               </span>
-                              <span className="text-xs text-right" style={{ color: 'var(--text-secondary)' }}>
-                                {String(val ?? '—')}
+                              <span className="text-xs text-right whitespace-pre-wrap break-words min-w-0" style={{ color: 'var(--text-secondary)' }}>
+                                {val !== null && typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val ?? '—')}
                               </span>
                             </div>
                           ))}

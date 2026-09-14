@@ -89,6 +89,22 @@ const googleLoginSchema = z.object({
   id_token: z.string().min(1, 'Google ID token is required'),
 });
 
+const githubLoginSchema = z.object({
+  code: z.string().optional(),
+  token: z.string().optional(),
+  access_token: z.string().optional(),
+}).refine((v) => v.code || v.token || v.access_token, {
+  message: 'GitHub code or access token is required',
+});
+
+const linkedinLoginSchema = z.object({
+  code: z.string().optional(),
+  token: z.string().optional(),
+  access_token: z.string().optional(),
+}).refine((v) => v.code || v.token || v.access_token, {
+  message: 'LinkedIn code or access token is required',
+});
+
 // refreshToken is optional in the body; the controller reads it from the httpOnly
 // cookie first (web flow) and falls back to the body (API/mobile flow).
 const refreshTokenSchema = z.object({
@@ -134,6 +150,8 @@ module.exports = {
   adminUpdateUserSchema,
   loginSchema,
   googleLoginSchema,
+  githubLoginSchema,
+  linkedinLoginSchema,
   refreshTokenSchema,
   forgotPasswordSchema,
   resetPasswordSchema,

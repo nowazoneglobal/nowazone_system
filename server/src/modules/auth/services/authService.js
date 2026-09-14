@@ -653,6 +653,157 @@ class AuthService {
 
     return this.createSession(user, ipAddress, userAgent, true);
   }
+
+  async githubLoginOrRegister(tokenOrCode, ipAddress, userAgent) {
+    let accessToken = tokenOrCode.access_token || tokenOrCode.token;
+    if (!accessToken && tokenOrCode.code) {
+      const clientId = process.env.GITHUB_CLIENT_ID;
+      const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+      if (!clientId || !clientSecret) {
+        throw new AppError('GitHub sign-in is not configured', 503);
+      }
+      const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code: tokenOrCode.code,
+        }),
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok || tokenData.error) {
+        throw new AppError(tokenData.error_description || 'Failed to exchange GitHub authorization code', 400);
+      }
+      accessToken = tokenData.access_token;
+    }
+
+    if (!accessToken) {
+      throw new AppError('GitHub access token or code is required', 400);
+    }
+
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'User-Agent': 'Nowazone-Auth',
+      },
+    });
+    const ghUser = await userRes.json();
+    if (!userRes.ok || !ghUser) {
+      throw new AppError('Invalid GitHub token', 401);
+    }
+
+    let email = (ghUser.email || '').toLowerCase().trim();
+    if (!email) {
+      const emailsRes = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'User-Agent': 'Nowazone-Auth',
+        },
+      });
+      if (emailsRes.ok) {
+        const emails = await emailsRes.json();
+        const primary = Array.isArray(emails) && emails.find((e) => e.primary && e.verified);
+        if (primary) email = primary.email.toLowerCase().trim();
+        else if (Array.isArray(emails) && emails[0]?.email) email = emails[0].email.toLowerCase().trim();
+      }
+    }
+
+    if (!email) {
+      email = `${ghUser.login}@users.noreply.github.com`.toLowerCase();
+    }
+
+    const name = ghUser.name || ghUser.login || 'GitHub User';
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const permissions = await this.getDefaultPermissions('customer');
+      user = await User.create({
+        name: name.trim(),
+        email,
+        password: crypto.randomBytes(24).toString('hex'),
+        role: 'customer',
+        roles: ['customer'],
+        permissions,
+        profileImage: ghUser.avatar_url ? { url: ghUser.avatar_url, publicId: 'github' } : undefined,
+        isActive: true,
+      });
+    } else if (!user.isActive) {
+      throw new AppError('Account is disabled', 403);
+    }
+
+    return this.createSession(user, ipAddress, userAgent, true);
+  }
+
+  async linkedinLoginOrRegister(tokenOrCode, ipAddress, userAgent) {
+    let accessToken = tokenOrCode.access_token || tokenOrCode.token;
+    if (!accessToken && tokenOrCode.code) {
+      const clientId = process.env.LINKEDIN_CLIENT_ID;
+      const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+      const redirectUri = process.env.LINKEDIN_REDIRECT_URI || `${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'http://localhost:2424'}/auth/callback/linkedin`;
+      if (!clientId || !clientSecret) {
+        throw new AppError('LinkedIn sign-in is not configured', 503);
+      }
+      const params = new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: tokenOrCode.code,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+        client_secret: clientSecret,
+      });
+      const tokenRes = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok || tokenData.error) {
+        throw new AppError(tokenData.error_description || 'Failed to exchange LinkedIn authorization code', 400);
+      }
+      accessToken = tokenData.access_token;
+    }
+
+    if (!accessToken) {
+      throw new AppError('LinkedIn access token or code is required', 400);
+    }
+
+    const userRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const liUser = await userRes.json();
+    if (!userRes.ok || !liUser) {
+      throw new AppError('Invalid LinkedIn token', 401);
+    }
+
+    const email = (liUser.email || '').toLowerCase().trim();
+    if (!email) throw new AppError('LinkedIn account has no email', 400);
+
+    const name = liUser.name || `${liUser.given_name || ''} ${liUser.family_name || ''}`.trim() || 'LinkedIn User';
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const permissions = await this.getDefaultPermissions('customer');
+      user = await User.create({
+        name: name.trim(),
+        email,
+        password: crypto.randomBytes(24).toString('hex'),
+        role: 'customer',
+        roles: ['customer'],
+        permissions,
+        profileImage: liUser.picture ? { url: liUser.picture, publicId: 'linkedin' } : undefined,
+        isActive: true,
+      });
+    } else if (!user.isActive) {
+      throw new AppError('Account is disabled', 403);
+    }
+
+    return this.createSession(user, ipAddress, userAgent, true);
+  }
 }
 
 // Dummy bcrypt to maintain constant-time behavior when a user is not found

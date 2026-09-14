@@ -19,6 +19,7 @@ interface Application {
   applicantPhone?: string;
   job?: { _id: string; title: string; department?: string };
   resumeUrl?: string;
+  coverLetter?: string;
   skills?: string[];
   experience?: string;
   status: AppStatus;
@@ -47,6 +48,10 @@ const STATUS_TRANSITIONS: Record<AppStatus, AppStatus[]> = {
 interface JobOption { _id: string; title: string }
 
 export default function ApplicationsPage() {
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loadError, setLoadError] = useState('');
   const [applications, setApplications]   = useState<Application[]>([]);
   const [loading, setLoading]             = useState(true);
   const [search, setSearch]               = useState('');
@@ -65,20 +70,22 @@ export default function ApplicationsPage() {
   }, []);
 
   const fetchApplications = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setLoadError('');
     try {
-      const params = new URLSearchParams({ limit: '50' });
+      const params = new URLSearchParams({ limit: '50', page: String(page) });
       if (search)       params.set('search', search);
       if (jobFilter)    params.set('job', jobFilter);
       if (statusFilter) params.set('status', statusFilter);
       const { data } = await api.get(`/applications?${params.toString()}`);
-      setApplications(data.data?.applications || data.data || []);
+      setApplications(data.data?.applications || []);
+      setPages(Math.max(1, data.data?.pagination?.pages || 1));
+      setTotal(data.data?.pagination?.total || 0);
     } catch {
-      setApplications([]);
+      setLoadError('Could not load applications. Please retry.');
     } finally {
       setLoading(false);
     }
-  }, [search, jobFilter, statusFilter]);
+  }, [search, jobFilter, statusFilter, page]);
 
   useEffect(() => { fetchApplications(); }, [fetchApplications]);
 
@@ -133,7 +140,7 @@ export default function ApplicationsPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Application Pipeline</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            {applications.length} application{applications.length !== 1 ? 's' : ''} across {COLUMNS.length} stages
+            {total} matching applications — showing {applications.length} on this page
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -143,14 +150,14 @@ export default function ApplicationsPage() {
               type="text"
               placeholder="Search applicants…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-9 pr-4 py-2.5 text-sm rounded-xl border outline-none w-56"
               style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
             />
           </div>
           <select
             value={jobFilter}
-            onChange={(e) => setJobFilter(e.target.value)}
+            onChange={(e) => { setJobFilter(e.target.value); setPage(1); }}
             className="px-3 py-2.5 text-sm rounded-xl border outline-none cursor-pointer"
             style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
           >
@@ -159,7 +166,7 @@ export default function ApplicationsPage() {
           </select>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             className="px-3 py-2.5 text-sm rounded-xl border outline-none cursor-pointer"
             style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
           >
@@ -246,6 +253,14 @@ export default function ApplicationsPage() {
         ))}
       </div>
 
+      <div className="flex items-center gap-3 text-sm">
+        {loadError && <span role="alert">{loadError}</span>}
+        <button onClick={fetchApplications}>Refresh</button>
+        <button disabled={page <= 1 || loading} onClick={() => setPage(value => value - 1)}>Previous</button>
+        <span>Page {page} of {pages}</span>
+        <button disabled={page >= pages || loading} onClick={() => setPage(value => value + 1)}>Next</button>
+      </div>
+
       {/* Side Panel */}
       <AnimatePresence>
         {selected && (
@@ -319,6 +334,7 @@ export default function ApplicationsPage() {
                 )}
 
                 {/* Experience */}
+                {selected.coverLetter && <section><h3 className="text-xs font-semibold uppercase mb-2">Cover letter / portfolio</h3><p className="text-sm whitespace-pre-wrap break-words">{selected.coverLetter}</p></section>}
                 {selected.experience && (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Experience</p>

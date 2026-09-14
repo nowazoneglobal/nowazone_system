@@ -14,6 +14,8 @@ const {
   adminUpdateUserSchema,
   loginSchema,
   googleLoginSchema,
+  githubLoginSchema,
+  linkedinLoginSchema,
   refreshTokenSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -51,6 +53,22 @@ router.post(
   validate(googleLoginSchema),
   auditLogger('USER_GOOGLE_LOGIN'),
   authController.googleLogin
+);
+
+router.post(
+  '/github',
+  authLimiter,
+  validate(githubLoginSchema),
+  auditLogger('USER_GITHUB_LOGIN'),
+  authController.githubLogin
+);
+
+router.post(
+  '/linkedin',
+  authLimiter,
+  validate(linkedinLoginSchema),
+  auditLogger('USER_LINKEDIN_LOGIN'),
+  authController.linkedinLogin
 );
 
 // refresh: reads token from httpOnly cookie (web) OR body (API/mobile)

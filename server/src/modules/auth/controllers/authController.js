@@ -226,6 +226,78 @@ class AuthController {
     }
   }
 
+  // POST /auth/github  (public) — Sign in with GitHub code or token
+  async githubLogin(req, res, next) {
+    try {
+      const tokenOrCode = req.validated;
+      const ipAddress = req.ip;
+      const userAgent = req.get('user-agent');
+
+      const result = await authService.githubLoginOrRegister(tokenOrCode, ipAddress, userAgent);
+
+      const csrfToken = crypto.randomBytes(32).toString('hex');
+      setAuthCookies(req, res, {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        csrfToken,
+        refreshTokenTtlMs: result.refreshTokenTtlMs,
+      });
+
+      const responseData = {
+        user: result.user,
+        csrfToken,
+        ...(isMobileClient(req) && {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        }),
+      };
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Signed in with GitHub',
+        data: responseData,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // POST /auth/linkedin  (public) — Sign in with LinkedIn code or token
+  async linkedinLogin(req, res, next) {
+    try {
+      const tokenOrCode = req.validated;
+      const ipAddress = req.ip;
+      const userAgent = req.get('user-agent');
+
+      const result = await authService.linkedinLoginOrRegister(tokenOrCode, ipAddress, userAgent);
+
+      const csrfToken = crypto.randomBytes(32).toString('hex');
+      setAuthCookies(req, res, {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        csrfToken,
+        refreshTokenTtlMs: result.refreshTokenTtlMs,
+      });
+
+      const responseData = {
+        user: result.user,
+        csrfToken,
+        ...(isMobileClient(req) && {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        }),
+      };
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Signed in with LinkedIn',
+        data: responseData,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // POST /auth/refresh  (public)
   async refreshToken(req, res, next) {
     try {

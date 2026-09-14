@@ -16,6 +16,8 @@ interface Application {
   rating?: number;
   source: string;
   experience?: string;
+  coverLetter?: string;
+  resumeUrl?: string;
   createdAt: string;
 }
 
@@ -41,6 +43,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ApplicationsPage() {
+  const [page, setPage] = useState(1);
   const [apps, setApps]           = useState<Application[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
@@ -50,7 +53,7 @@ export default function ApplicationsPage() {
 
   const fetchApps = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: '50' });
+      const params = new URLSearchParams({ limit: '50', page: String(page) });
       if (statusFilter) params.set('status', statusFilter);
       if (search)       params.set('search', search);
       const { data } = await api.get(`/applications?${params}`);
@@ -58,7 +61,7 @@ export default function ApplicationsPage() {
       setTotal(data.data.pagination?.total || 0);
     } catch { toast.error('Failed to load applications'); }
     finally { setLoading(false); }
-  }, [statusFilter, search]);
+  }, [statusFilter, search, page]);
 
   useEffect(() => {
     const timer = setTimeout(() => fetchApps(), 400);
@@ -137,11 +140,11 @@ export default function ApplicationsPage() {
       >
         <div className="relative flex-1 min-w-[200px]">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search applicants…"
+          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Search applicants…"
             className="w-full pl-10 pr-4 py-3 border rounded-xl text-sm placeholder-gray-500 focus:outline-none"
             style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
         </div>
-        <select value={statusFilter} onChange={e => setStatus(e.target.value)}
+        <select value={statusFilter} onChange={e => { setStatus(e.target.value); setPage(1); }}
           className="px-4 py-3 border rounded-xl text-sm focus:outline-none"
           style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
           <option value="">All Statuses</option>
@@ -232,6 +235,12 @@ export default function ApplicationsPage() {
         </motion.div>
       )}
 
+      <div className="flex items-center gap-3 my-4 text-sm">
+        <button onClick={fetchApps}>Refresh</button>
+        <button disabled={page <= 1} onClick={() => setPage(value => value - 1)}>Previous</button>
+        <span>Page {page} of {Math.max(1, Math.ceil(total / 50))}</span>
+        <button disabled={page * 50 >= total} onClick={() => setPage(value => value + 1)}>Next</button>
+      </div>
       {/* Detail Side Panel */}
       <AnimatePresence>
         {selected && (
@@ -293,6 +302,8 @@ export default function ApplicationsPage() {
 
               <div>
                   <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Update Status</label>
+                {selected.coverLetter && <section className="mb-4"><h3>Cover letter / portfolio</h3><p className="whitespace-pre-wrap break-words">{selected.coverLetter}</p></section>}
+                {selected.resumeUrl?.startsWith('https://') && <a href={selected.resumeUrl} target="_blank" rel="noopener noreferrer" className="block mb-4">View resume PDF</a>}
                 {selected.status === 'hired' ? (
                   <p className="text-sm py-2" style={{ color: 'var(--text-muted)' }}>Hired — no further changes allowed.</p>
                 ) : (

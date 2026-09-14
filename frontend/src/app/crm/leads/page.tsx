@@ -65,23 +65,25 @@ const fadeUp = {
 };
 
 export default function LeadsPage() {
+  const [page, setPage] = useState(1);
   const [search, setSearch]             = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | LeadStatus>('all');
   const [followUpDue, setFollowUpDue]   = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: leadsData, isLoading: loading } = useQuery({
-    queryKey: ['leads', statusFilter, followUpDue],
+  const { data: leadsData, isLoading: loading, isError: loadError } = useQuery({
+    queryKey: ['leads', statusFilter, followUpDue, search, page],
     queryFn: async () => {
-      const params: Record<string, string | number> = { page: 1, limit: 100 };
+      const params: Record<string, string | number> = { page, limit: 50, search };
       if (statusFilter !== 'all') params.status = statusFilter;
       if (followUpDue) params.followUpDue = 'true';
-      const { data } = await api.get<{ data: { leads: Lead[] } }>('/leads', { params });
+      const { data } = await api.get<{ data: { leads: Lead[]; pagination: { total: number; pages: number } } }>('/leads', { params });
       return data.data;
     },
   });
   const leads = leadsData?.leads ?? [];
+  const pages = leadsData?.pagination?.pages || 1;
 
   const createMutation = useMutation({
     mutationFn: (payload: AddLeadForm) => api.post('/leads', payload),
@@ -164,10 +166,10 @@ export default function LeadsPage() {
   }, [leads]);
 
   const kpis = [
-    { label: 'Total Leads',  value: stats.total,      icon: Users2,           accent: 'var(--accent)',  bg: 'var(--accent-subtle)' },
-    { label: 'Qualified',    value: stats.qualified,  icon: Target,           accent: 'var(--accent)',  bg: 'var(--accent-subtle)' },
-    { label: 'Converted',    value: stats.converted, icon: CircleDollarSign, accent: 'var(--success)', bg: 'var(--success-subtle)' },
-    { label: 'Avg Score',    value: stats.avgScore,   icon: TrendingUp,       accent: 'var(--warning)', bg: 'var(--warning-subtle)' },
+    { label: 'Leads on page',  value: stats.total,      icon: Users2,           accent: 'var(--accent)',  bg: 'var(--accent-subtle)' },
+    { label: 'Qualified on page',    value: stats.qualified,  icon: Target,           accent: 'var(--accent)',  bg: 'var(--accent-subtle)' },
+    { label: 'Converted on page',    value: stats.converted, icon: CircleDollarSign, accent: 'var(--success)', bg: 'var(--success-subtle)' },
+    { label: 'Avg Score on page',    value: stats.avgScore,   icon: TrendingUp,       accent: 'var(--warning)', bg: 'var(--warning-subtle)' },
   ];
 
   return (
@@ -273,7 +275,7 @@ export default function LeadsPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search name, email, company..."
             className="w-full pl-9 pr-4 py-2.5 rounded-lg border text-[13px] focus:outline-none transition-colors"
             style={{
@@ -292,7 +294,7 @@ export default function LeadsPage() {
             style={{ color: 'var(--text-muted)' }} />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | LeadStatus)}
+            onChange={(e) => { setStatusFilter(e.target.value as 'all' | LeadStatus); setPage(1); }}
             className="pl-9 pr-8 py-2.5 rounded-lg border text-[13px] appearance-none cursor-pointer focus:outline-none"
             style={{
               backgroundColor: 'var(--surface)',
@@ -310,7 +312,7 @@ export default function LeadsPage() {
         {/* Follow-up due toggle */}
         <motion.button
           type="button"
-          onClick={() => setFollowUpDue((v) => !v)}
+          onClick={() => { setFollowUpDue((v) => !v); setPage(1); }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="flex items-center gap-2 px-3 py-2 rounded-lg border text-[12px] font-medium cursor-pointer transition-all"
@@ -333,7 +335,7 @@ export default function LeadsPage() {
               <motion.button
                 key={s}
                 type="button"
-                onClick={() => setStatusFilter(statusFilter === s ? 'all' : s)}
+                onClick={() => { setStatusFilter(statusFilter === s ? 'all' : s); setPage(1); }}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium cursor-pointer transition-all"
@@ -351,6 +353,7 @@ export default function LeadsPage() {
         </div>
       </motion.div>
 
+      {loadError && <p role="alert">Could not load leads. Please use Refresh to retry.</p>}
       {/* ── Table ───────────────────────────────────────────── */}
       <div className="rounded-xl border overflow-hidden"
         style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
@@ -536,9 +539,15 @@ export default function LeadsPage() {
       {/* ── Footer ──────────────────────────────────────────── */}
       {!loading && filteredLeads.length > 0 && (
         <p className="text-[12px] text-right" style={{ color: 'var(--text-muted)' }}>
-          Showing {filteredLeads.length} of {leads.length} leads
+          Showing {filteredLeads.length} of {leadsData?.pagination?.total ?? leads.length} matching leads
         </p>
       )}
+
+      <div className="flex items-center justify-end gap-3 text-sm">
+        <button disabled={page <= 1 || loading} onClick={() => setPage(value => value - 1)}>Previous</button>
+        <span>Page {page} of {pages}</span>
+        <button disabled={page >= pages || loading} onClick={() => setPage(value => value + 1)}>Next</button>
+      </div>
 
       {/* ── Add Lead Modal ─────────────────────────────────── */}
       <AnimatePresence>
