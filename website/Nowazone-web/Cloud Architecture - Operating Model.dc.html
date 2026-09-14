@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<title>Cloud Operating Model Design Services — Nowazone</title>
+<meta name="description" content="Cloud operating model design — governance, cost accountability and operational ownership, defined before migration cutover, not scrambled together after.">
+<link rel="canonical" href="https://www.nowazone.com/cloud-architecture/operating-model">
+<meta property="og:url" content="https://www.nowazone.com/cloud-architecture/operating-model">
+<meta property="og:title" content="Cloud Operating Model Design Services — Nowazone">
+<meta property="og:description" content="Cloud operating model design — governance, cost accountability and operational ownership, defined before migration cutover.">
+<link rel="stylesheet" href="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/styles.css">
+<script src="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/_ds_bundle.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Organization","name":"Nowazone","url":"https://www.nowazone.com","description":"FinOps as a Service and cloud cost optimization partner."},
+{"@type":"Service","serviceType":"Cloud Operating Model Design","provider":{"@type":"Organization","name":"Nowazone"},"areaServed":"Worldwide","description":"Governance, cost accountability and operational ownership defined before migration cutover."},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What's the difference between the operating model and managed service support?","acceptedAnswer":{"@type":"Answer","text":"The operating model defines who owns what. Managed Service is how that ownership is actually staffed and delivered day-to-day — see the Managed Service pillar."}},
+{"@type":"Question","name":"Do you help design showback/chargeback reporting?","acceptedAnswer":{"@type":"Answer","text":"Yes — cost accountability structure is one of the three pillars we define before cutover."}},
+{"@type":"Question","name":"Can you review an existing operating model instead of designing a new one?","acceptedAnswer":{"@type":"Answer","text":"Yes. A review applies the same three-pillar framework — governance, cost accountability and operational ownership — to what's already in place and identifies the gaps."}}
+]}
+]}
+</script>
+<style>
+:root { --font-heading: 'Helvetica Neue', Arial, sans-serif; --font-body: 'Helvetica Neue', Arial, sans-serif; }
+body { margin: 0; text-wrap: pretty; }
+a { color: #084ea3; text-decoration: none; }
+a:hover { color: #0f5bdb; }
+.nav-burger{display:none}
+@media (max-width:900px){ .nav-links{display:none !important} .nav-burger{display:flex !important} .caom-3col{grid-template-columns:1fr !important} }
+@keyframes ctaGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(26,110,250,.55), 0 4px 14px rgba(0,0,0,.18); } 50% { box-shadow: 0 0 0 8px rgba(26,110,250,0), 0 4px 14px rgba(0,0,0,.18); } }
+</style>
+</helmet>
+
+<nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;row-gap:14px;padding:14px 32px;background:#0e1f33;position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(255,255,255,.1)">
+  <a href="Nowazone Homepage.dc.html" style="display:flex;align-items:center;margin-right:auto"><img src="uploads/Use-1.png" alt="Nowazone" style="height:38px;width:auto;display:block"></a>
+  <button type="button" class="nav-burger" onclick="{{ toggleMobileMenu }}" aria-label="Menu" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:4px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+  <div class="nav-links" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;row-gap:10px">
+  <a href="Cloud Architecture.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Cloud Architecture</a>
+  <a href="Cloud Migration.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Cloud Migration</a>
+  <a href="Pricing & Engagement Models.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Pricing</a>
+  </div>
+  <div style="display:flex;gap:10px;flex:none;white-space:nowrap">
+    <a href="Cloud Migration.dc.html#requirement-form" style="position:relative;border:none;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:2px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite;display:inline-flex;align-items:center" style-hover="transform:translateY(-2px) scale(1.03);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Get a Migration Review</a>
+  </div>
+  <sc-if value="{{ isMobileMenuOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-top:1px solid rgba(255,255,255,.14);padding:8px 20px 16px;display:flex;flex-direction:column;box-shadow:0 20px 36px rgba(0,0,0,.35);z-index:50">
+    <a href="Cloud Architecture.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">Cloud Architecture</a>
+    <a href="Cloud Migration.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">Cloud Migration</a>
+    <a href="Pricing & Engagement Models.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px">Pricing</a>
+  </div>
+  </sc-if>
+</nav>
+
+<div style="max-width:1000px;margin:0 auto;padding:20px 40px 0"><a href="Cloud Architecture.dc.html" style="font-size:13.5px;font-weight:600;color:#084ea3">← Cloud Architecture</a></div>
+
+<!-- SECTION 1: HERO -->
+<section style="background:var(--color-bg);padding:44px 40px 56px">
+  <div style="max-width:900px;margin:0 auto;text-align:center">
+    <span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#084ea3;font-weight:700;font-family:var(--font-heading);background:var(--color-accent-100);border:1px solid var(--color-accent-500);padding:6px 14px;border-radius:20px;margin-bottom:22px">Cloud Architecture → Operating Model</span>
+    <h1 style="font-family:var(--font-heading);font-weight:700;font-size:clamp(26px,3.8vw,40px);line-height:1.15;letter-spacing:-0.01em;margin:0 0 18px">Cloud Operating Model — Defined Ownership Before Go-Live.</h1>
+    <p style="font-size:16px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0 auto;max-width:60ch">Migration without an operating model just moves the chaos to a new address. Before cutover, we define who owns what.</p>
+  </div>
+</section>
+
+<!-- SECTION 2: THREE PILLARS -->
+<section style="background:#0e1f33;padding:56px 40px">
+  <div style="max-width:1000px;margin:0 auto">
+    <h2 style="text-align:center;font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:#f2f2f3;margin:0 0 32px">What We Define Before Cutover</h2>
+    <div class="caom-3col" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:26px">
+        <h3 style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:#f2f2f3;margin:0 0 10px">Governance &amp; Guardrails</h3>
+        <p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.65);margin:0">Policy baselines, tagging standards and access control, enforced from day one rather than cleaned up later.</p>
+      </div>
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:26px">
+        <h3 style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:#f2f2f3;margin:0 0 10px">Cost Accountability</h3>
+        <p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.65);margin:0">A showback/chargeback structure tied directly to the FinOps cost model built during migration planning — cost ownership is assigned, not ambiguous.</p>
+      </div>
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:26px">
+        <h3 style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:#f2f2f3;margin:0 0 10px">Operational Ownership</h3>
+        <p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.65);margin:0">A defined escalation path from first-line monitoring through to architecture-level decisions — see <a href="Managed Service.dc.html" style="color:#60a5fa">Managed Service</a> for how this is staffed after go-live.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: WHY THIS IS DEFINED BEFORE MIGRATION -->
+<section style="background:var(--color-bg);padding:52px 40px">
+  <div style="max-width:750px;margin:0 auto;text-align:center">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);margin:0 0 14px">Why We Do This Before Go-Live</h2>
+    <p style="font-size:15px;line-height:1.7;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0">Day one in a new environment with no defined ownership is a scramble, not a launch. Every operating model decision here is made before cutover, so day one has clear ownership from the start.</p>
+  </div>
+</section>
+
+<!-- SECTION 4: CROSS-LINK -->
+<section style="background:#0e1f33;padding:44px 40px;text-align:center">
+  <a href="Managed Service.dc.html" style="font-weight:600;font-size:15px;color:#60a5fa">See how this operating model is staffed and run day-to-day →</a>
+</section>
+
+<!-- SECTION 5: FAQ -->
+<section style="background:var(--color-bg);padding:52px 40px">
+  <div style="max-width:800px;margin:0 auto">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:var(--color-text);margin:0 0 24px">Operating Model Questions</h2>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="3">
+        <details style="border-top:1px solid var(--color-divider);padding:16px 0">
+          <summary style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);cursor:pointer">{{ f.q }}</summary>
+          <p style="font-size:13.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:10px 0 0">{{ f.a }}</p>
+        </details>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: CTA BANNER -->
+<section style="background:#0a1830;padding:40px 40px;text-align:center">
+  <a href="Cloud Migration.dc.html#requirement-form" style="font-family:var(--font-heading);font-weight:700;font-size:17px;color:#60a5fa">Ready to scope your migration? →</a>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0a1830;padding:40px 40px 24px;border-top:1px solid rgba(255,255,255,.1)">
+  <div style="max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+    <img src="uploads/Use-1.png" alt="Nowazone" style="height:26px;width:auto;display:block">
+    <span style="font-size:13px;color:rgba(255,255,255,.45)">© 2026 Nowazone Global Systems. All rights reserved.</span>
+  </div>
+</footer>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  faqData = [
+    { q: "What's the difference between the operating model and managed service support?", a: "The operating model defines who owns what. Managed Service is how that ownership is actually staffed and delivered day-to-day — see the Managed Service pillar." },
+    { q: "Do you help design showback/chargeback reporting?", a: "Yes — cost accountability structure is one of the three pillars we define before cutover." },
+    { q: "Can you review an existing operating model instead of designing a new one?", a: "Yes. A review applies the same three-pillar framework — governance, cost accountability and operational ownership — to what's already in place and identifies the gaps." }
+  ];
+  state = { mobileMenuOpen: false };
+  renderVals() {
+    return {
+      faqs: this.faqData,
+      toggleMobileMenu: () => this.setState(s => ({ mobileMenuOpen: !s.mobileMenuOpen })),
+      isMobileMenuOpen: this.state.mobileMenuOpen
+    };
+  }
+}
+
+</script>
+</body>
+</html>

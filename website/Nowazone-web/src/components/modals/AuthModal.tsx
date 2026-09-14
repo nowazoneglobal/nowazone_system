@@ -1,0 +1,716 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useModals } from '../../context/ModalContext';
+import { useAuth } from '../../context/AuthContext';
+import {
+  loginUser,
+  registerUser,
+  requestPasswordReset,
+  resetPassword,
+  googleLogin,
+  githubLogin,
+  linkedinLogin,
+} from '../../api/auth';
+import { X, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+
+export const AuthModal: React.FC = () => {
+  const { isAuthModalOpen, closeAuthModal, authView, setAuthView } = useModals();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [company, setCompany] = useState('');
+  const [resetToken, setResetToken] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  // Check URL query parameters for OAuth callbacks (GitHub, LinkedIn, or Google)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const authProvider =
+      params.get('provider') ||
+      (window.location.pathname.includes('github') ? 'github' : '') ||
+      (window.location.pathname.includes('linkedin') ? 'linkedin' : '');
+
+    if (code && authProvider) {
+      setLoading(true);
+      const doOAuth =
+        authProvider === 'github'
+          ? githubLogin({ code })
+          : linkedinLogin({ code });
+
+      doOAuth
+        .then((res) => {
+          setLoading(false);
+          if (res.status === 'success' && res.data?.user) {
+            login(res.data.user, res.data.csrfToken || '');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            navigate('/portal');
+          } else {
+            setError(res.message || `${authProvider} authentication failed.`);
+          }
+        })
+        .catch((err) => {
+          setLoading(false);
+          setError(err.message || 'Social authentication failed.');
+        });
+    }
+  }, [login, navigate]);
+
+  if (!isAuthModalOpen) return null;
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const res = await loginUser({ email: email.trim().toLowerCase(), password });
+    setLoading(false);
+
+    if (res.status === 'success' && res.data?.user) {
+      login(res.data.user, res.data.csrfToken || '');
+      closeAuthModal();
+      navigate('/portal');
+    } else {
+      setError(res.message || 'Invalid email or password. Please try again.');
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (confirmPassword && password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    // Register as a customer (client portal user)
+    const res = await registerUser({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      company: company.trim() || undefined,
+      role: 'customer',
+    });
+
+    if (res.status === 'success') {
+      // Automatically log the new user in
+      const loginRes = await loginUser({ email: email.trim().toLowerCase(), password });
+      setLoading(false);
+
+      if (loginRes.status === 'success' && loginRes.data?.user) {
+        login(loginRes.data.user, loginRes.data.csrfToken || '');
+        closeAuthModal();
+        navigate('/portal');
+      } else {
+        setInfoMessage('Account created successfully! Please sign in with your credentials.');
+        setAuthView('login');
+      }
+    } else {
+      setLoading(false);
+      setError(res.message || (res.errors && res.errors[0]?.message) || 'Registration failed. Please check your information.');
+    }
+  };
+
+  const handleSendResetEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const res = await requestPasswordReset({ email: email.trim().toLowerCase() });
+    setLoading(false);
+
+    if (res.status === 'success') {
+      setInfoMessage('If an account exists with that email, password reset instructions have been sent.');
+      setAuthView('forgot-otp');
+    } else {
+      setError(res.message || 'Unable to process reset request. Please check your email and try again.');
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const res = await resetPassword({ token: resetToken.trim(), password });
+    setLoading(false);
+
+    if (res.status === 'success') {
+      setAuthView('forgot-done');
+    } else {
+      setError(res.message || 'Invalid or expired reset token. Please request a new one.');
+    }
+  };
+
+  // ─── Social Authentication Handlers ──────────────────────────────────────────
+
+  const handleGoogleSignIn = async () => {
+    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setError('Google Sign-In is configured on the backend (/api/auth/google). To connect Google Identity directly, specify VITE_GOOGLE_CLIENT_ID in your environment.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      // @ts-ignore
+      if (window.google?.accounts?.id) {
+        // @ts-ignore
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response: any) => {
+            if (response.credential) {
+              const res = await googleLogin(response.credential);
+              if (res.status === 'success' && res.data?.user) {
+                login(res.data.user, res.data.csrfToken || '');
+                closeAuthModal();
+                navigate('/portal');
+              } else {
+                setError(res.message || 'Google authentication failed.');
+              }
+            }
+          },
+        });
+        // @ts-ignore
+        window.google.accounts.id.prompt();
+      } else {
+        setError('Google Identity SDK is still loading. Please try again in a moment.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Google Sign-In failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLinkedInSignIn = async () => {
+    const clientId = (import.meta as any).env?.VITE_LINKEDIN_CLIENT_ID;
+    if (!clientId) {
+      setError('LinkedIn OAuth is integrated on the backend (/api/auth/linkedin). To launch the OAuth redirect, specify VITE_LINKEDIN_CLIENT_ID in your environment.');
+      return;
+    }
+    const redirectUri = encodeURIComponent(`${window.location.origin}/portal?provider=linkedin`);
+    window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=openid%20profile%20email`;
+  };
+
+  const handleGitHubSignIn = async () => {
+    const clientId = (import.meta as any).env?.VITE_GITHUB_CLIENT_ID;
+    if (!clientId) {
+      setError('GitHub OAuth is integrated on the backend (/api/auth/github). To launch the OAuth redirect, specify VITE_GITHUB_CLIENT_ID in your environment.');
+      return;
+    }
+    const redirectUri = encodeURIComponent(`${window.location.origin}/portal?provider=github`);
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
+  };
+
+  // ─── Social Buttons Component (Matches HTML Source Exactly) ────────────────
+
+  const renderSocialButtons = () => (
+    <div className="flex flex-col gap-2.5 mb-5">
+      {/* Continue with Google */}
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+        className="w-full py-2.5 px-4 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white font-heading font-semibold text-[13.5px] flex items-center justify-center gap-2.5 transition-colors cursor-pointer shadow-sm"
+      >
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path
+            fill="#FFC107"
+            d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"
+          />
+          <path
+            fill="#FF3D00"
+            d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4c-7.6 0-14.2 4.3-17.7 10.7z"
+          />
+          <path
+            fill="#4CAF50"
+            d="M24 44c5.3 0 10.1-1.8 13.9-5.1l-6.4-5.4C29.5 35.4 26.9 36 24 36c-5.3 0-9.8-3.4-11.4-8.1l-6.6 5.1C9.7 39.6 16.3 44 24 44z"
+          />
+          <path
+            fill="#1976D2"
+            d="M43.6 20.5H42V20H24v8h11.3c-1 3-3 5.5-5.7 7l6.4 5.4C39.7 37.5 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"
+          />
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      {/* Continue with LinkedIn */}
+      <button
+        type="button"
+        onClick={handleLinkedInSignIn}
+        disabled={loading}
+        className="w-full py-2.5 px-4 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white font-heading font-semibold text-[13.5px] flex items-center justify-center gap-2.5 transition-colors cursor-pointer shadow-sm"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2">
+          <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.03-1.85-3.03-1.85 0-2.14 1.44-2.14 2.94v5.66H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.11 20.45H3.56V9h3.56v11.45z" />
+        </svg>
+        <span>Continue with LinkedIn</span>
+      </button>
+
+      {/* Continue with GitHub */}
+      <button
+        type="button"
+        onClick={handleGitHubSignIn}
+        disabled={loading}
+        className="w-full py-2.5 px-4 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white font-heading font-semibold text-[13.5px] flex items-center justify-center gap-2.5 transition-colors cursor-pointer shadow-sm"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" className="fill-current text-[#181717] dark:text-white">
+          <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.3 11.3 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.9 1.2 1.9 1.2 3.2 0 4.5-2.7 5.5-5.4 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z" />
+        </svg>
+        <span>Continue with GitHub</span>
+      </button>
+    </div>
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0E1F33]/80 backdrop-blur-sm animate-fadeSlide"
+      onClick={closeAuthModal}
+    >
+      <div
+        className="relative w-full max-w-md bg-white dark:bg-[#0E1F33] text-slate-900 dark:text-white rounded-2xl shadow-2xl p-7 sm:p-8 border border-slate-200 dark:border-white/10 transition-colors max-h-[92vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeAuthModal}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-white/70 dark:hover:text-white transition-colors"
+        >
+          <X size={18} />
+        </button>
+
+        {/* Global Error Banner */}
+        {error && (
+          <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-start gap-2.5">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Global Info Banner */}
+        {infoMessage && (
+          <div className="mb-5 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-[#0F62FE] dark:text-[#60A5FA] text-xs flex items-start gap-2.5">
+            <CheckCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{infoMessage}</span>
+          </div>
+        )}
+
+        {/* ─────────────────── LOGIN VIEW ─────────────────── */}
+        {authView === 'login' && (
+          <div>
+            <div className="mb-5">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-[#0F62FE] dark:text-[#60A5FA] bg-[#0F62FE]/10 px-2.5 py-0.5 rounded-full mb-2">
+                Client Portal
+              </span>
+              <h3 className="font-heading font-bold text-2xl">Log In to Nowazone.</h3>
+              <p className="text-[13px] text-slate-500 dark:text-white/60 mt-1">
+                Access your client FinOps reporting, spend telemetry, and executive reviews.
+              </p>
+            </div>
+
+            {/* Social Authentication: Google, LinkedIn, GitHub */}
+            {renderSocialButtons()}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 my-4">
+              <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
+              <span className="text-[11.5px] text-slate-400 dark:text-white/40 lowercase">
+                or continue with email
+              </span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE] focus:ring-1 focus:ring-[#0F62FE] transition-colors"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      setInfoMessage(null);
+                      setAuthView('forgot-email');
+                    }}
+                    className="text-[12px] text-[#0F62FE] dark:text-[#60A5FA] hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE] focus:ring-1 focus:ring-[#0F62FE] transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0a63ce] hover:bg-[#0f5bdb] text-white font-heading font-bold text-[14.5px] py-3 rounded-md transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer shadow-lg shadow-[#0a63ce]/20"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Log In'}
+              </button>
+            </form>
+
+            <div className="text-center text-[13.5px] text-slate-500 dark:text-white/60 mt-5 pt-4 border-t border-slate-200 dark:border-white/10">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setInfoMessage(null);
+                  setAuthView('signup');
+                }}
+                className="font-semibold text-[#0a63ce] dark:text-[#60A5FA] hover:underline"
+              >
+                Sign up
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────── SIGNUP VIEW ─────────────────── */}
+        {authView === 'signup' && (
+          <div>
+            <div className="mb-5">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-[#0F62FE] dark:text-[#60A5FA] bg-[#0F62FE]/10 px-2.5 py-0.5 rounded-full mb-2">
+                Client Registration
+              </span>
+              <h3 className="font-heading font-bold text-2xl">Create Your Account.</h3>
+              <p className="text-[13px] text-slate-500 dark:text-white/60 mt-1">
+                Start your cloud cost visibility journey with Nowazone.
+              </p>
+            </div>
+
+            {/* Social Authentication: Google, LinkedIn, GitHub */}
+            {renderSocialButtons()}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 my-4">
+              <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
+              <span className="text-[11.5px] text-slate-400 dark:text-white/40 lowercase">
+                or continue with email
+              </span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
+            </div>
+
+            <form onSubmit={handleRegister} className="space-y-3.5">
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Sarah Connor"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Work Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Company / Organization
+                </label>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Enterprise Inc."
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Confirm Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0a63ce] hover:bg-[#0f5bdb] text-white font-heading font-bold text-[14.5px] py-3 rounded-md transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer shadow-lg shadow-[#0a63ce]/20"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Create Account'}
+              </button>
+            </form>
+
+            <div className="text-center text-[13.5px] text-slate-500 dark:text-white/60 mt-5 pt-4 border-t border-slate-200 dark:border-white/10">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setInfoMessage(null);
+                  setAuthView('login');
+                }}
+                className="font-semibold text-[#0a63ce] dark:text-[#60A5FA] hover:underline"
+              >
+                Log in
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────── FORGOT PASSWORD (EMAIL) ─────────────────── */}
+        {authView === 'forgot-email' && (
+          <div>
+            <h3 className="font-heading font-semibold text-[22px] mb-2">Reset Your Password.</h3>
+            <p className="text-[14px] text-slate-500 dark:text-white/60 mb-6 leading-relaxed">
+              Enter your email and we'll send a one-time code to verify it's you.
+            </p>
+
+            <form onSubmit={handleSendResetEmail} className="space-y-4">
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0a63ce] hover:bg-[#0f5bdb] text-white font-heading font-bold text-[14.5px] py-3 rounded-md transition-all flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Send OTP'}
+              </button>
+            </form>
+
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setAuthView('login');
+                }}
+                className="text-[13.5px] font-semibold text-slate-600 dark:text-white/70 hover:underline"
+              >
+                ← Back to login
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────── FORGOT (ENTER CODE / OTP) ─────────────────── */}
+        {authView === 'forgot-otp' && (
+          <div>
+            <h3 className="font-heading font-semibold text-[22px] mb-2">Enter the Code.</h3>
+            <p className="text-[14px] text-slate-500 dark:text-white/60 mb-5 leading-relaxed">
+              We sent a 6-digit code to <strong className="text-slate-900 dark:text-white">{email}</strong>.
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setAuthView('forgot-reset');
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1.5">
+                  One-Time Code / Reset Token
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                  placeholder="123456"
+                  className="w-full px-3.5 py-3 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white font-mono text-center text-lg tracking-[0.2em] focus:outline-none focus:border-[#0F62FE]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#0a63ce] hover:bg-[#0f5bdb] text-white font-heading font-bold text-[14.5px] py-3 rounded-md transition-all"
+              >
+                Verify Code
+              </button>
+            </form>
+
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => setAuthView('login')}
+                className="text-[13.5px] font-semibold text-slate-600 dark:text-white/70 hover:underline"
+              >
+                ← Back to login
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────── SET NEW PASSWORD ─────────────────── */}
+        {authView === 'forgot-reset' && (
+          <div>
+            <h3 className="font-heading font-semibold text-[22px] mb-2">Set a New Password.</h3>
+            <p className="text-[13.5px] text-slate-500 dark:text-white/60 mb-5">
+              Create a strong password for your Nowazone client account.
+            </p>
+
+            <form onSubmit={handleResetPassword} className="space-y-3.5">
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Reset Token / Code *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                  placeholder="Paste code or token..."
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white font-mono text-[13px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  New Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold uppercase tracking-wider text-slate-600 dark:text-white/70 mb-1">
+                  Confirm New Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white text-[14px]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0a63ce] hover:bg-[#0f5bdb] text-white font-heading font-bold text-[14.5px] py-3 rounded-md transition-all flex items-center justify-center gap-2 mt-2"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Reset Password'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ─────────────────── RESET SUCCESS ─────────────────── */}
+        {authView === 'forgot-done' && (
+          <div className="text-center py-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} />
+            </div>
+            <h3 className="font-heading font-semibold text-[20px] mb-2">Password Reset.</h3>
+            <p className="text-[14px] text-slate-500 dark:text-white/70 mb-6 leading-relaxed">
+              You can now log in with your new password.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setInfoMessage(null);
+                setAuthView('login');
+              }}
+              className="bg-[#0a63ce] hover:bg-[#0f5bdb] text-white font-heading font-bold text-[14px] px-8 py-2.5 rounded-md shadow-lg shadow-[#0a63ce]/20"
+            >
+              Back to Login
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<title>Azure Cost Management &amp; Optimization Services — Nowazone</title>
+<meta name="description" content="Azure cost management and optimization services — Reserved Instance gaps, oversized VMs, Azure Hybrid Benefit review. Free Azure Cost Assessment.">
+<link rel="canonical" href="https://www.nowazone.com/platforms/azure-cost-optimization">
+<meta property="og:url" content="https://www.nowazone.com/platforms/azure-cost-optimization">
+<meta property="og:title" content="Azure Cost Management &amp; Optimization Services — Nowazone">
+<meta property="og:description" content="Azure cost management and optimization services — Reserved Instance gaps, oversized VMs, Azure Hybrid Benefit review.">
+<link rel="stylesheet" href="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/styles.css">
+<script src="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/_ds_bundle.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Organization","name":"Nowazone","url":"https://www.nowazone.com","description":"FinOps as a Service and cloud cost optimization partner."},
+{"@type":"Service","serviceType":"Azure Cost Optimization","provider":{"@type":"Organization","name":"Nowazone"},"areaServed":"Worldwide","description":"Azure billing audits, Reserved Instance and Savings Plan optimization, VM and SQL rightsizing, Azure Hybrid Benefit review, and cost governance."},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How much can we save on Azure costs?","acceptedAnswer":{"@type":"Answer","text":"Most Azure environments we review carry 15–35% in avoidable spend from idle resources, oversized VMs and uncommitted usage. Your free assessment gives you an exact number."}},
+{"@type":"Question","name":"Do you need Owner access to our Azure subscription?","acceptedAnswer":{"@type":"Answer","text":"No. Cost Management Reader access is enough for the assessment. We only request elevated access if you move forward with implementation, under NDA."}},
+{"@type":"Question","name":"Does this replace our Azure support plan?","acceptedAnswer":{"@type":"Answer","text":"No, it complements it. Microsoft support handles technical issues; we focus specifically on cost — commitments, rightsizing and waste."}},
+{"@type":"Question","name":"How does Azure Hybrid Benefit factor into cost savings?","acceptedAnswer":{"@type":"Answer","text":"We check whether your on-premises Windows Server and SQL Server licenses with Software Assurance are being applied in Azure — a commonly missed discount worth 40%+ on eligible workloads."}},
+{"@type":"Question","name":"What's included in Azure cost management?","acceptedAnswer":{"@type":"Answer","text":"Reserved Instance and Savings Plan coverage review, VM and SQL rightsizing, Azure Hybrid Benefit checks, budget and anomaly alerting, and ongoing cost governance across your subscriptions."}},
+{"@type":"Question","name":"What Azure services carry the most hidden cost?","acceptedAnswer":{"@type":"Answer","text":"Virtual Machines, managed disks and Azure SQL Database are the most common sources of overspend, typically from oversizing and missed Reserved Instance coverage."}}
+]}
+]}
+</script>
+<style>
+:root { --font-heading: 'Helvetica Neue', Arial, sans-serif; --font-body: 'Helvetica Neue', Arial, sans-serif; }
+body { margin: 0; text-wrap: pretty; }
+a { color: #084ea3; text-decoration: none; }
+a:hover { color: #0f5bdb; }
+.nav-burger{display:none}
+@keyframes tickFade { 0% { opacity: .4; } 100% { opacity: 1; } }
+@media (max-width:680px){ .modal-grid{grid-template-columns:1fr !important} .modal-aside{display:none !important} }
+@media (max-width:900px){ .nav-links{display:none !important} .nav-burger{display:flex !important} .az-3col{grid-template-columns:1fr !important} .az-2col{grid-template-columns:1fr !important} }
+@media (max-width:1100px){ .az-hero-grid{grid-template-columns:1fr !important} }
+@keyframes ctaGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(26,110,250,.55), 0 4px 14px rgba(0,0,0,.18); } 50% { box-shadow: 0 0 0 8px rgba(26,110,250,0), 0 4px 14px rgba(0,0,0,.18); } }
+</style>
+</helmet>
+
+<nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;row-gap:14px;padding:14px 32px;background:#0e1f33;position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(255,255,255,.1)">
+  <a href="Nowazone Homepage.dc.html" style="display:flex;align-items:center;margin-right:auto"><img src="uploads/Use-1.png" alt="Nowazone" style="height:38px;width:auto;display:block"></a>
+  <button type="button" class="nav-burger" onclick="{{ toggleMobileMenu }}" aria-label="Menu" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:4px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+  <div class="nav-links" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;row-gap:10px">
+  <div style="position:relative" onmouseenter="{{ openPlatformsMenu }}" onmouseleave="{{ closeMenuSoon }}">
+    <span style="cursor:pointer;color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Platforms ▾</span>
+  </div>
+  <div style="position:relative" onmouseenter="{{ openSolutionsMenu }}" onmouseleave="{{ closeMenuSoon }}">
+    <span style="cursor:pointer;color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Solutions ▾</span>
+  </div>
+  <a href="FinOps.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">FinOps</a>
+  <a href="How We Work.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">How We Work</a>
+  <div style="position:relative" onmouseenter="{{ openCompanyMenu }}" onmouseleave="{{ closeMenuSoon }}">
+    <span style="cursor:pointer;color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Company ▾</span>
+  </div>
+  <a href="Careers.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Careers</a>
+  <a href="Nowazone Homepage.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Login</a>
+  </div>
+  <div style="display:flex;gap:10px;flex:none;white-space:nowrap">
+    <a href="Cost Estimator.dc.html" style="white-space:nowrap;display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.3);background:transparent;color:#f2f2f3;font-family:var(--font-heading);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:0">Cost Estimator</a>
+    <button type="button" onclick="{{ openModal }}" style="position:relative;border:1px solid #0a63ce;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:2px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite" style-hover="transform:translateY(-2px) scale(1.03);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Free Azure Cost Assessment</button>
+  </div>
+
+  <sc-if value="{{ isPlatformsOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 24px 40px rgba(0,0,0,.35);padding:36px 40px" onmouseenter="{{ keepMenuOpen }}" onmouseleave="{{ closeMenuSoon }}">
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:28px 40px">
+      <a href="Azure Cost Optimization.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:6px"><img src="assets/logos/azure.png" alt="Microsoft Azure cost optimization" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Microsoft Azure</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Reservations, rightsizing and Azure cost governance.</span></div></a>
+      <a href="AWS Cost Optimization.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:6px"><img src="assets/logos/aws.png" alt="AWS cost optimization" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">AWS</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Savings Plans, rightsizing and multi-account FinOps.</span></div></a>
+      <a href="Google Cloud Cost Optimization.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:6px"><img src="assets/logos/google-cloud.png" alt="Google Cloud cost optimization" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Google Cloud</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">CUD strategy, project allocation and BigQuery cost control.</span></div></a>
+      <a href="Oracle Cloud Cost Optimization.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:1px"><img src="assets/logos/oracle-cloud.png" alt="Oracle Cloud Infrastructure cost management" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Oracle Cloud (OCI)</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Universal Credits optimization and OCI cost governance.</span></div></a>
+      <a href="Alibaba Cloud Cost Optimization.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:1px"><img src="assets/logos/alibaba-cloud.png" alt="Alibaba Cloud cost management" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Alibaba Cloud</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">ECS, OSS and regional cost governance.</span></div></a>
+      <a href="Databricks & BigQuery Cost Optimization.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:1px"><img src="assets/logos/databricks.png" alt="Databricks and BigQuery cost optimization" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Databricks &amp; BigQuery</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Compute, query and storage cost optimization.</span></div></a>
+      <a href="Multi-Cloud Cost Management.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><ellipse cx="12" cy="12" rx="4" ry="9"></ellipse><path d="M3 12h18"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Multi-Cloud</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">One cost language across every cloud, on FOCUS.</span></div></a>
+      <a href="AI Cost Optimization & Tokenomics.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">FinOps for AI (Tokenomics)</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Token cost, GPU utilisation and agentic workload economics.</span></div></a>
+      <a href="Multi-Cloud Cost Management.dc.html" style="grid-column:2 / 4;background:rgba(10,99,206,.12);border:1px solid rgba(10,99,206,.35);border-radius:10px;padding:20px;text-decoration:none;display:flex;flex-direction:column;justify-content:center">
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:16px;color:#fff;margin-bottom:8px">Multi-cloud from day one</span>
+        <span style="display:block;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.65);margin-bottom:14px">One FinOps practice across every platform you run — no per-cloud silos.</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#60a5fa">Compare platforms →</span>
+      </a>
+    </div>
+  </div>
+  </sc-if>
+
+    <sc-if value="{{ isSolutionsOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 24px 40px rgba(0,0,0,.35);padding:36px 40px" onmouseenter="{{ keepMenuOpen }}" onmouseleave="{{ closeMenuSoon }}">
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:28px 40px">
+      <a href="Cloud Migration.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><path d="M4 12h11M11 6l5 6-5 6"></path><path d="M15 6h5v12h-5"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Cloud Migration</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Cost-aware migration planning and execution.</span></div></a>
+      <a href="Cloud Architecture.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Cloud Architecture</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Landing zones and architecture reviews built for cost.</span></div></a>
+      <a href="Managed Service.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Managed Cloud</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Ongoing operations, monitoring and cost governance.</span></div></a>
+      <a href="FinOps.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l1.8 1.8L15 10"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">FinOps as a Service</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Cost optimization run for you, flat fee, no dashboard to babysit.</span></div></a>
+      <a href="Microsoft Licensing & Reselling.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:6px"><img src="assets/logos/azure.png" alt="Microsoft licensing reseller" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Microsoft Licensing &amp; Reselling</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Microsoft 365, Azure and EA/CSP licensing procurement.</span></div></a>
+      <a href="Google Cloud Licensing & Reselling.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;padding:6px"><img src="assets/logos/google-cloud.png" alt="Google Cloud licensing reseller" style="width:100%;height:100%;object-fit:contain"></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Google Cloud Licensing &amp; Reselling</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Google Workspace and Google Cloud licensing procurement.</span></div></a>
+      <a href="Contact Us.dc.html" style="grid-column:3;background:rgba(10,99,206,.12);border:1px solid rgba(10,99,206,.35);border-radius:10px;padding:20px;text-decoration:none">
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:16px;color:#fff;margin-bottom:8px">Not sure where to start?</span>
+        <span style="display:block;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.65);margin-bottom:14px">Get a free assessment scoped to your environment and priorities.</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#60a5fa">Book an assessment →</span>
+      </a>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isCompanyOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 24px 40px rgba(0,0,0,.35);padding:36px 40px" onmouseenter="{{ keepMenuOpen }}" onmouseleave="{{ closeMenuSoon }}">
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:28px 40px">
+      <a href="About Us.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><circle cx="12" cy="8" r="3.2"></circle><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">About Us</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Who we are and why we stay vendor-independent.</span></div></a>
+      <a href="Our Process.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><path d="M4 12h11M11 6l5 6-5 6"></path><path d="M15 6h5v12h-5"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Our Process</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">From assessment to committed savings, step by step.</span></div></a>
+      <a href="Nowazone Homepage.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Case Studies</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Real client results, quantified savings and outcomes.</span></div></a>
+      <a href="Pricing & Engagement Models.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><circle cx="12" cy="12" r="9"></circle><path d="M9 12l1.8 1.8L15 10"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">FinOps Pricing &amp; Engagement Models</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">How we structure outcome-based engagements.</span></div></a>
+      <a href="Partner Program.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3.2"></ellipse><path d="M4 6v6c0 1.77 3.58 3.2 8 3.2s8-1.43 8-3.2V6"></path><path d="M4 12v6c0 1.77 3.58 3.2 8 3.2s8-1.43 8-3.2v-6"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Partners</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Microsoft and Google Cloud partner relationships.</span></div></a>
+      <a href="Nowazone Homepage.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"></circle><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Careers</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Open roles across FinOps, engineering and delivery.</span></div></a>
+      <a href="Trust & Security.dc.html" style="display:flex;gap:14px;text-decoration:none"><div style="width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a63ce" stroke-width="1.7"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"></path><path d="M9 12l2 2 4-4"></path></svg></div><div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Trust &amp; Security</span><span style="font-size:13px;line-height:1.5;color:rgba(255,255,255,.55)">Read-only access, certified practitioners and data handling.</span></div></a>
+      <a href="Contact Us.dc.html" style="grid-column:3;background:rgba(10,99,206,.12);border:1px solid rgba(10,99,206,.35);border-radius:10px;padding:20px;text-decoration:none">
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:16px;color:#fff;margin-bottom:8px">Talk to our team</span>
+        <span style="display:block;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.65);margin-bottom:14px">Questions about pricing, partnership or careers?</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#60a5fa">Contact Us →</span>
+      </a>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isMobileMenuOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-top:1px solid rgba(255,255,255,.14);padding:8px 20px 16px;display:flex;flex-direction:column;box-shadow:0 20px 36px rgba(0,0,0,.35);z-index:50">
+    <a href="Azure Cost Optimization.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">Azure</a>
+    <a href="AWS Cost Optimization.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">AWS</a>
+    <a href="Google Cloud Cost Optimization.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px">Google Cloud</a>
+  </div>
+  </sc-if>
+</nav>
+
+<!-- HERO: centered, text-only -->
+<section style="background:var(--color-bg);padding:60px 40px;border-bottom:1px solid var(--color-divider)">
+  <div style="max-width:820px;margin:0 auto;text-align:center">
+    <span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#084ea3;font-weight:700;font-family:var(--font-heading);background:var(--color-accent-100);border:1px solid var(--color-accent-500);padding:6px 14px;border-radius:20px;margin-bottom:20px">Azure Cost Optimization Services</span>
+    <h1 style="font-family:var(--font-heading);font-weight:700;font-size:clamp(30px,4.4vw,50px);line-height:1.1;letter-spacing:-0.01em;margin:0 0 18px">Azure Cost Management &amp; Optimization Services</h1>
+    <p style="font-size:16.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0 auto 28px;max-width:60ch">We audit your Azure environment for Reserved Instance gaps, oversized VMs, unused disks and missed Azure Hybrid Benefit discounts — then hand you a prioritized Azure cost reduction plan with the dollar impact of each fix.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:28px">
+      <button type="button" onclick="{{ openModal }}" style="position:relative;border:none;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:14.5px;padding:15px 30px;border-radius:2px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite" style-hover="transform:translateY(-2px) scale(1.03);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Free Azure Cost Assessment</button>
+      <a href="#faq" style="display:inline-flex;align-items:center;border:1px solid var(--color-accent-500);color:var(--color-text);font-family:var(--font-heading);font-weight:600;font-size:14.5px;padding:15px 26px;border-radius:2px">Read the FAQ</a>
+    </div>
+    <div style="display:flex;gap:28px;justify-content:center;flex-wrap:wrap">
+      <div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:22px;color:#084ea3">15–35%</span><span style="font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Typical Azure savings found</span></div>
+      <div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:22px;color:#084ea3">2–5 days</span><span style="font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">To a documented cost review</span></div>
+      <div><span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:22px;color:#084ea3">$0</span><span style="font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">To start with an assessment</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section style="background:var(--color-bg);padding:52px 40px">
+  <div class="az-2col" style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px">
+    <div>
+      <span style="display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#084ea3;font-weight:700;font-family:var(--font-heading);margin-bottom:14px">Why Azure Bills Grow</span>
+      <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(24px,2.8vw,32px);line-height:1.2;margin:0 0 16px">Azure Rewards Provisioning, Not Cleanup.</h2>
+      <p style="font-size:15px;line-height:1.65;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0">Teams spin up resources fast and rarely revisit them. Over months, on-demand rates, oversized VMs and forgotten disks compound into a bill that's far bigger than the workload actually needs.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#084ea3" stroke-width="1.6" style="flex:none"><rect x="3" y="6" width="18" height="12" rx="1.5"></rect><path d="M7 18v2M17 18v2M3 10h18"></path></svg>
+        <div style="display:block;overflow:hidden"><span style="display:block;font-size:14.5px;font-weight:600;color:var(--color-text);line-height:1.35">Oversized VMs running 24/7</span><span style="display:block;font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent);margin-top:5px">Avg. impact: $2,400–$9,000/mo</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#084ea3" stroke-width="1.6" style="flex:none"><path d="M12 2l7 4v6l-7 4-7-4V6z"></path><path d="M12 12v8"></path></svg>
+        <div style="display:block;overflow:hidden"><span style="display:block;font-size:14.5px;font-weight:600;color:var(--color-text);line-height:1.35">Reserved Instance coverage gaps</span><span style="display:block;font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent);margin-top:5px">Avg. impact: $3,000–$14,000/mo</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#084ea3" stroke-width="1.6" style="flex:none"><ellipse cx="12" cy="6" rx="7" ry="3"></ellipse><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"></path></svg>
+        <div style="display:block;overflow:hidden"><span style="display:block;font-size:14.5px;font-weight:600;color:var(--color-text);line-height:1.35">Orphaned disks &amp; unused public IPs</span><span style="display:block;font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent);margin-top:5px">Avg. impact: $600–$2,800/mo</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:center;padding:16px 0">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#084ea3" stroke-width="1.6" style="flex:none"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M9 9h6v6H9z"></path></svg>
+        <div style="display:block;overflow:hidden"><span style="display:block;font-size:14.5px;font-weight:600;color:var(--color-text);line-height:1.35">Dev/test running outside business hours</span><span style="display:block;font-size:12.5px;color:color-mix(in srgb,var(--color-text) 55%,transparent);margin-top:5px">Avg. impact: $900–$3,500/mo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE COST INTELLIGENCE DASHBOARD (middle of page) -->
+<section style="background:#0a1830;padding:48px 40px">
+  <div style="max-width:1180px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+      <div>
+        <span style="display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#60a5fa;font-weight:700;font-family:var(--font-heading);margin-bottom:6px">Live Azure Cost Dashboard — Sample Output</span>
+        <h2 style="font-family:var(--font-heading);font-weight:600;font-size:24px;color:#f2f2f3;margin:0">Azure Cost Management Dashboard: Spend, Forecast &amp; Savings</h2>
+      </div>
+      <span style="font-size:12.5px;color:rgba(255,255,255,.5)">Refreshing live · {{ lastUpdated }}</span>
+    </div>
+
+    <!-- Number cards row -->
+    <div class="az-3col" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <span style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px">Total Monthly Spend</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:26px;color:#f2f2f3">${{ spendDisplay }}</span>
+        <span style="display:block;font-size:11.5px;color:#f87171;margin-top:4px">↑ {{ spendTrend }}% vs last month</span>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <span style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px">Forecasted Next Month</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:26px;color:#f2f2f3">${{ forecastDisplay }}</span>
+        <span style="display:block;font-size:11.5px;color:rgba(255,255,255,.45);margin-top:4px">Based on 6-month trend</span>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <span style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px">Savings Identified</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:26px;color:#4ade80">${{ totalSavings }}</span>
+        <span style="display:block;font-size:11.5px;color:rgba(255,255,255,.45);margin-top:4px">Per month, if actioned</span>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <span style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px">Reservation Coverage</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:26px;color:#f2f2f3">{{ coveragePct }}%</span>
+        <span style="display:block;font-size:11.5px;color:rgba(255,255,255,.45);margin-top:4px">Target: 80%+</span>
+      </div>
+    </div>
+
+    <!-- Line + Donut charts row -->
+    <div class="az-2col" style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px">
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:22px">
+        <span style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px">Spend Trend &amp; Forecast (6 Months)</span>
+        <svg viewBox="0 0 320 90" width="100%" height="90" style="display:block">
+          <polyline points="0,62 45,58 90,64 135,50 180,54 225,40 270,44 300,32" fill="none" stroke="#60a5fa" stroke-width="2.5"></polyline>
+          <polyline points="300,32 320,{{ forecastY }}" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" stroke-dasharray="3 3"></polyline>
+          <circle cx="300" cy="32" r="3.5" fill="#60a5fa"></circle>
+          <circle cx="320" cy="{{ forecastY }}" r="3.5" fill="rgba(255,255,255,.6)"></circle>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:rgba(255,255,255,.5);margin-top:6px"><span>● Actual spend</span><span>┄ Forecast: ${{ forecastDisplay }}</span></div>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:22px;display:flex;flex-direction:column;align-items:center">
+        <span style="display:block;align-self:flex-start;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px">Cost Distribution by Resource</span>
+        <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(#0a63ce 0% {{ vmPct }}%, #60a5fa {{ vmPct }}% {{ vmSqlStop }}%, #93c5fd {{ vmSqlStop }}% {{ vmSqlStorageStop }}%, #c7d2fe {{ vmSqlStorageStop }}% 100%);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <div style="width:80px;height:80px;border-radius:50%;background:#0e1f33;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-family:var(--font-heading);font-weight:700;font-size:15px;color:#f2f2f3">${{ spendDisplay }}</span><span style="font-size:9px;color:rgba(255,255,255,.5)">total</span></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:10.5px;color:rgba(255,255,255,.6)"><span>■ VM {{ vmPct }}%</span><span>■ SQL {{ sqlPct }}%</span><span>■ Storage {{ storagePct }}%</span><span>■ Network {{ netPct }}%</span></div>
+      </div>
+    </div>
+
+    <!-- Bar chart: resource cards with icons -->
+    <div class="az-3col" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.6"><rect x="3" y="6" width="18" height="12" rx="1.5"></rect><path d="M7 18v2M17 18v2"></path></svg>
+          <span style="font-size:11px;font-weight:700;color:#f87171">+{{ vmTrend }}%</span>
+        </div>
+        <span style="display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px">Virtual Machines</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:20px;color:#f2f2f3">${{ vmCost }}</span>
+        <span style="display:block;font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">{{ vmPct }}% of total spend</span>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="1.6"><ellipse cx="12" cy="6" rx="7" ry="3"></ellipse><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"></path></svg>
+          <span style="font-size:11px;font-weight:700;color:#4ade80">−{{ storageTrend }}%</span>
+        </div>
+        <span style="display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px">Managed Disks</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:20px;color:#f2f2f3">${{ storageCost }}</span>
+        <span style="display:block;font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">{{ storagePct }}% of total spend</span>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c7d2fe" stroke-width="1.6"><ellipse cx="12" cy="6" rx="8" ry="3"></ellipse><path d="M4 6v5c0 1.7 3.6 3 8 3s8-1.3 8-3V6"></path><path d="M4 11v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5"></path></svg>
+          <span style="font-size:11px;font-weight:700;color:#f87171">+{{ sqlTrend }}%</span>
+        </div>
+        <span style="display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px">Azure SQL Database</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:20px;color:#f2f2f3">${{ sqlCost }}</span>
+        <span style="display:block;font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">{{ sqlPct }}% of total spend</span>
+      </div>
+      <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.5 2.5 15.5 0 18M12 3c-2.5 2.5-2.5 15.5 0 18"></path></svg>
+          <span style="font-size:11px;font-weight:700;color:#4ade80">−{{ netTrend }}%</span>
+        </div>
+        <span style="display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px">Networking &amp; Egress</span>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:20px;color:#f2f2f3">${{ netCost }}</span>
+        <span style="display:block;font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">{{ netPct }}% of total spend</span>
+      </div>
+    </div>
+    <div style="background:#0e1f33;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:22px 24px">
+      <span style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px">Top Savings Opportunities Detected</span>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px">
+          <span style="display:flex;align-items:center;gap:10px;font-size:13px;color:#f2f2f3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>14 unattached managed disks, Standard SSD tier</span>
+          <span style="font-size:13px;font-weight:700;color:#f87171">${{ opp1 }}/mo</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px">
+          <span style="display:flex;align-items:center;gap:10px;font-size:13px;color:#f2f2f3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>9 idle D-series VMs, &lt;5% average CPU</span>
+          <span style="font-size:13px;font-weight:700;color:#fbbf24">${{ opp2 }}/mo</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:8px">
+          <span style="display:flex;align-items:center;gap:10px;font-size:13px;color:#f2f2f3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>Azure Hybrid Benefit unclaimed on 6 SQL VMs</span>
+          <span style="font-size:13px;font-weight:700;color:#fbbf24">${{ opp3 }}/mo</span>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin:18px 0 0">Illustrative example — numbers refresh to show live-tracking style. Your assessment reflects your real account.</p>
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<section style="background:var(--color-bg);padding:52px 40px">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:36px">
+      <span style="display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#084ea3;font-weight:700;font-family:var(--font-heading);margin-bottom:12px">What We Do on Azure</span>
+      <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(24px,2.8vw,32px);margin:0">Five Levers, One Azure Cost Practice.</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px">
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:24px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:16px;margin:0 0 8px">Cost Management Audit</h3><p style="font-size:13.5px;line-height:1.55;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin:0">Full Azure Cost Management + Billing review across subscriptions.</p></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:24px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:16px;margin:0 0 8px">RI &amp; Savings Plan Optimization</h3><p style="font-size:13.5px;line-height:1.55;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin:0">Right-term, right-scope commitments matched to real usage.</p></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:24px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:16px;margin:0 0 8px">VM &amp; Storage Rightsizing</h3><p style="font-size:13.5px;line-height:1.55;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin:0">SKU and tier recommendations for VMs, SQL DB and storage accounts.</p></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:24px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:16px;margin:0 0 8px">Governance &amp; Alerts</h3><p style="font-size:13.5px;line-height:1.55;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin:0">Tagging standards, budgets and anomaly alerts that stick.</p></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:24px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:16px;margin:0 0 8px">Azure Hybrid Benefit Review</h3><p style="font-size:13.5px;line-height:1.55;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin:0">Check whether your Software Assurance licenses are being applied.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGAGEMENT -->
+<section style="background:#0e1f33;padding:52px 40px">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="max-width:62ch;margin-bottom:28px">
+      <span style="display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#60a5fa;font-weight:700;font-family:var(--font-heading);margin-bottom:14px">Get Started on Azure</span>
+      <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(26px,3vw,34px);line-height:1.15;color:#f2f2f3;margin:0">Two Steps to a Lower Azure Bill.</h2>
+    </div>
+    <div class="az-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div style="border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:32px 28px;display:flex;flex-direction:column">
+        <span style="font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:#7fa8e0;font-weight:700;font-family:var(--font-heading);margin-bottom:10px">Step 1 — Always Free</span>
+        <h3 style="font-family:var(--font-heading);font-weight:700;font-size:22px;color:#f2f2f3;margin:0 0 10px">Azure Cost X-Ray Assessment</h3>
+        <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.65);margin:0 0 20px">Read-only review of your subscriptions with a savings breakdown by category.</p>
+        <div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)"><span style="font-family:var(--font-heading);font-weight:700;font-size:30px;color:#f2f2f3">$0</span>
+          <button type="button" onclick="{{ openModal }}" style="position:relative;width:100%;margin-top:16px;border:none;background:#fff;color:#0a1830;font-family:var(--font-heading);font-weight:700;font-size:14.5px;padding:13px 20px;border-radius:6px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite" style-hover="transform:translateY(-2px) scale(1.03)"><i class="corner tl" style="color:rgba(10,24,48,.35)"></i><i class="corner tr" style="color:rgba(10,24,48,.35)"></i><i class="corner bl" style="color:rgba(10,24,48,.35)"></i><i class="corner br" style="color:rgba(10,24,48,.35)"></i>Get My Free Assessment</button>
+        </div>
+      </div>
+      <div style="border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:32px 28px;display:flex;flex-direction:column">
+        <span style="font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:700;font-family:var(--font-heading);margin-bottom:10px">2–5 Business Days</span>
+        <h3 style="font-family:var(--font-heading);font-weight:700;font-size:22px;color:#f2f2f3;margin:0 0 10px">Azure Cost Leak Review</h3>
+        <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.65);margin:0 0 20px">A fixed-price, documented diagnostic — ranked findings you can act on immediately.</p>
+        <div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)"><span style="font-family:var(--font-heading);font-weight:700;font-size:26px;color:#f2f2f3">$750–$1,250*</span>
+          <button type="button" onclick="{{ openModal }}" style="position:relative;width:100%;margin-top:16px;border:none;background:#fff;color:#0a1830;font-family:var(--font-heading);font-weight:700;font-size:14.5px;padding:13px 20px;border-radius:6px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite" style-hover="transform:translateY(-2px) scale(1.03)"><i class="corner tl" style="color:rgba(10,24,48,.35)"></i><i class="corner tr" style="color:rgba(10,24,48,.35)"></i><i class="corner bl" style="color:rgba(10,24,48,.35)"></i><i class="corner br" style="color:rgba(10,24,48,.35)"></i>Get Started</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:var(--color-bg);padding:52px 40px">
+  <div style="max-width:900px;margin:0 auto">
+    <span style="display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#084ea3;font-weight:700;font-family:var(--font-heading);margin-bottom:14px">Common Questions</span>
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(24px,2.8vw,32px);line-height:1.15;color:var(--color-text);margin:0 0 30px">Azure Cost Optimization, Answered.</h2>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="5">
+        <details style="border-top:1px solid var(--color-divider);padding:18px 0">
+          <summary style="font-family:var(--font-heading);font-weight:600;font-size:15.5px;color:var(--color-text);cursor:pointer">{{ f.q }}</summary>
+          <p style="font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:12px 0 0">{{ f.a }}</p>
+        </details>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section style="background:#0a1830;padding:52px 40px;text-align:center">
+  <div style="max-width:700px;margin:0 auto">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(24px,2.8vw,32px);color:#f2f2f3;margin:0 0 16px">Ready to See What Azure Is Actually Costing You?</h2>
+    <button type="button" onclick="{{ openModal }}" style="position:relative;border:none;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:14.5px;padding:15px 32px;border-radius:2px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite" style-hover="transform:translateY(-2px) scale(1.03);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Start My Free Assessment</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0a1830;padding:64px 40px 0">
+  <div style="max-width:1400px;margin:0 auto">
+    <div class="footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:32px;padding-bottom:48px">
+      <div>
+        <div style="display:flex;align-items:center;margin-bottom:22px"><img src="uploads/Use-1.png" alt="Nowazone" style="height:38px;width:auto;display:block"></div>
+        <p style="font-size:14.5px;line-height:1.65;color:rgba(255,255,255,.55);margin:0 0 24px;max-width:34ch">We help businesses optimize cloud and AI investments with FinOps discipline, cloud governance and expert engineering — with 15–42% savings committed.</p>
+        <div style="display:flex;gap:10px;margin-bottom:22px">
+          <a href="Nowazone Homepage.dc.html" style="width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(255,255,255,.75)"><path d="M4.98 3.5C4.98 4.88 3.94 6 2.5 6S0 4.88 0 3.5 1.04 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8.75h4V23h-4V8.75zM8.5 8.75h3.83v1.96h.05c.53-1 1.84-2.06 3.79-2.06 4.06 0 4.81 2.67 4.81 6.14V23h-4v-6.63c0-1.58-.03-3.61-2.2-3.61-2.2 0-2.54 1.72-2.54 3.5V23h-4V8.75z"></path></svg></a>
+          <a href="Nowazone Homepage.dc.html" style="width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,.75)"><path d="M18.24 2H21l-6.5 7.43L22 22h-6.62l-5.2-6.8L4.2 22H1.4l7-8.02L1 2h6.78l4.7 6.24L18.24 2zm-1.16 18h1.83L7.02 3.9H5.06L17.08 20z"></path></svg></a>
+          <a href="Nowazone Homepage.dc.html" style="width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,.75)"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.4 3.5 12 3.5 12 3.5s-7.4 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c2 .6 9.4.6 9.4.6s7.4 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"></path></svg></a>
+          <a href="Nowazone Homepage.dc.html" style="width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(255,255,255,.75)"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.88-1.54-3.88-1.54-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.8 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.15v3.19c0 .3.21.66.79.55A10.5 10.5 0 0 0 23.5 12c0-6.27-5.23-11.5-11.5-11.5z"></path></svg></a>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+          <img src="assets/microsoft-partner-badge.png" alt="Microsoft Partner" style="height:32px;width:auto;display:block">
+          <div style="display:flex;align-items:center;gap:8px;flex:none">
+            <img src="assets/google-cloud-icon.png" alt="Google Cloud" style="height:32px;width:32px;display:block">
+            <div style="display:flex;flex-direction:column;line-height:1.05">
+              <span style="font-family:var(--font-heading);font-weight:500;font-size:15px;color:rgba(255,255,255,.75)">Google Cloud</span>
+              <span style="font-family:var(--font-heading);font-weight:500;font-size:15px;color:rgba(255,255,255,.5)">Partner</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:13px;letter-spacing:.08em;color:#f2f2f3;margin-bottom:20px">SERVICES</span>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">FinOps Services</a>
+          <a href="AI Cost Optimization & Tokenomics.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">AI FinOps</a>
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Cloud Cost Optimization</a>
+          <a href="Cloud Architecture.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Cloud Architecture Review</a>
+          <a href="Managed Service.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Cloud Operations</a>
+          <a href="Cloud Migration.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Cloud Migration Services</a>
+        </div>
+      </div>
+      <div>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:13px;letter-spacing:.08em;color:#f2f2f3;margin-bottom:20px">SOLUTIONS</span>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <a href="FinOps.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">FinOps for Cloud</a>
+          <a href="AI Cost Optimization & Tokenomics.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">FinOps for AI</a>
+          <a href="AI Cost Optimization & Tokenomics.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">AI Tokenomics</a>
+          <a href="Databricks & BigQuery Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">FinOps on Databricks</a>
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">FinOps for SaaS</a>
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Power BI for FinOps</a>
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">New to Cloud</a>
+          <a href="Microsoft Licensing & Reselling.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Microsoft Licensing &amp; Reselling</a>
+          <a href="Google Cloud Licensing & Reselling.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Google Cloud Licensing &amp; Reselling</a>
+        </div>
+      </div>
+      <div>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:13px;letter-spacing:.08em;color:#f2f2f3;margin-bottom:20px">PLATFORMS</span>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <a href="Azure Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Microsoft Azure</a>
+          <a href="AWS Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">AWS</a>
+          <a href="Google Cloud Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Google Cloud</a>
+          <a href="Oracle Cloud Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Oracle Cloud (OCI)</a>
+          <a href="Alibaba Cloud Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Alibaba Cloud</a>
+          <a href="Databricks & BigQuery Cost Optimization.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Databricks &amp; BigQuery</a>
+          <a href="Multi-Cloud Cost Management.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Multi-Cloud</a>
+        </div>
+      </div>
+      <div>
+        <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:13px;letter-spacing:.08em;color:#f2f2f3;margin-bottom:20px">COMPANY</span>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">About Us</a>
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Our Process</a>
+          <a href="Nowazone Homepage.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Case Studies</a>
+          <a href="Pricing & Engagement Models.dc.html" style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.4">FinOps Pricing &amp; Engagement Models</a>
+          <a href="Partner Program.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Partners</a>
+          <a href="Blog.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Blog</a>
+          <a href="Careers.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Careers</a>
+          <a href="Contact Us.dc.html" style="font-size:14px;color:rgba(255,255,255,.6)">Contact Us</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding:24px 0;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;color:rgba(255,255,255,.45)">© 2026 Nowazone Global Systems. All rights reserved.</span>
+      <div style="display:flex;flex-wrap:wrap;gap:24px">
+        <a href="Privacy Policy.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Privacy Policy</a>
+        <a href="Terms of Service.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Terms of Service</a>
+        <a href="Data Processing Agreement.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Data Processing Agreement</a>
+        <a href="Partner Terms & Policy.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Partner Terms &amp; Policy</a>
+        <a href="Security & Compliance.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Security &amp; Compliance</a>
+        <a href="Trust & Security.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Trust &amp; Security</a>
+        <a href="Refund Policy.dc.html" style="font-size:13px;color:rgba(255,255,255,.45)">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(14,31,51,.78)" onclick="{{ closeModal }}">
+    <div class="modal-grid" style="width:min(860px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 30px 80px -12px rgba(10,20,40,.45);position:relative;display:grid;grid-template-columns:300px 1fr" onclick="{{ stopClick }}">
+      <button type="button" onclick="{{ closeModal }}" style="position:absolute;top:16px;right:18px;background:rgba(0,0,0,.06);border:none;border-radius:50%;width:30px;height:30px;font-size:17px;line-height:1;cursor:pointer;color:color-mix(in srgb,var(--color-text) 60%,transparent);z-index:2">×</button>
+      <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+        <div style="grid-column:1 / -1;padding:56px 48px;text-align:center">
+          <div style="width:56px;height:56px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg></div>
+          <h3 style="font-family:var(--font-heading);font-weight:600;font-size:24px;margin:0 0 10px">Request Received.</h3>
+          <p style="font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0">A FinOps specialist will follow up shortly with next steps for your Azure assessment.</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notSubmitted }}" hint-placeholder-val="{{ true }}">
+        <div class="modal-aside" style="background:#0e1f33;padding:44px 32px;display:flex;flex-direction:column;border-radius:14px 0 0 14px">
+          <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.15);color:#4ade80;font-family:var(--font-heading);font-weight:700;font-size:11px;letter-spacing:.06em;padding:5px 12px;border-radius:20px;margin-bottom:22px;align-self:flex-start">100% FREE</span>
+          <h3 style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.22;color:#f2f2f3;margin:0 0 28px">Let's Find Your Biggest Azure Saving Opportunities.</h3>
+          <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:auto">
+            <span style="font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.8)">✓ Read-only, non-invasive access</span>
+            <span style="font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.8)">✓ NDA &amp; MCA before any work begins</span>
+            <span style="font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.8)">✓ Report delivered within 24 working hours</span>
+            <span style="font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.8)">✓ Zero cost, zero obligation</span>
+          </div>
+          <div style="border-top:1px solid rgba(255,255,255,.14);padding-top:20px;margin-top:28px">
+            <span style="display:block;font-family:var(--font-heading);font-weight:700;font-size:28px;color:#f2f2f3;margin-bottom:4px">15–35%</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.55)">Typical Azure savings identified</span>
+          </div>
+        </div>
+                <form onsubmit="{{ onSubmit }}" style="display:flex;flex-direction:column;justify-content:center;gap:16px;padding:40px 40px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="field"><label>Work Email</label><input class="input" type="email" required="{{ true }}" placeholder="you@company.com"></div>
+            <div class="field"><label>Company</label><input class="input" type="text" required="{{ true }}"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:14px">
+            <div class="field"><label>Code</label>
+              <select class="input" onchange="{{ onCodeChange }}">
+                <option>US +1</option><option>IN +91</option><option>UAE +971</option><option>KSA +966</option><option>QA +974</option><option>BH +973</option><option>OM +968</option><option>MY +60</option><option>UK +44</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column:span 2"><label>Phone Number</label><input class="input" type="tel" placeholder="Phone number"></div>
+          </div>
+          <sc-if value="{{ isOtherCode }}" hint-placeholder-val="{{ false }}">
+          <div class="field"><label>Enter Your Country Code</label><input class="input" type="text" placeholder="e.g. +255"></div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="field"><label>Job Title</label><input class="input" type="text"></div>
+            <div class="field"><label>Workload Environment</label>
+              <select class="input"><option>Azure</option><option>Google Cloud</option><option>AWS</option><option>Multi-cloud</option><option>AI Workload</option><option>SaaS</option><option>Other</option></select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="field"><label>Approx. Monthly Cloud Spend</label>
+              <select class="input"><option>Under $50K</option><option>$50K–$250K</option><option>$250K–$500K</option><option>$500K–$1M</option><option>$1M–$2M</option><option>$2M+</option><option>Prefer not to say</option></select>
+            </div>
+            <div class="field"><label>What would you like help with?</label>
+              <select class="input"><option>Free Cost X-Ray Assessment</option><option>Cost Optimization</option><option>FinOps as a Service Partner</option><option>Cloud Architecture Review</option><option>SaaS Licenses Optimization</option><option>Managed Cloud Service</option><option>Migration Service</option><option>Pre-launch Estimate</option></select>
+            </div>
+          </div>
+          <div class="field"><label>Anything else we should know?</label><textarea rows="3" maxlength="400" placeholder="Up to 400 characters" class="input" style="resize:vertical;font-family:var(--font-body)"></textarea></div>
+          <button type="submit" class="btn-block" style="position:relative;border:none;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:15px;padding:16px 24px;border-radius:6px;cursor:pointer;margin-top:4px;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite" style-hover="transform:translateY(-1px);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Request My Assessment</button>
+          <span style="text-align:center;font-size:12px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Read-only access · NDA-first · No spam, ever.</span>
+        </form>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  base = { spend: 61400, vm: 34200, storage: 8600, sql: 12100, net: 6500 };
+  state = { open: {}, menuOpen: null, mobileMenuOpen: false, modalOpen: false, submitted: false, tick: 0, authModalOpen: false, authView: 'login', forgotEmail: '' };
+  faqData = [
+    { q: "How much can we save on Azure costs?", a: "Most Azure environments we review carry 15–35% in avoidable spend from idle resources, oversized VMs and uncommitted usage. Your free assessment gives you an exact number." },
+    { q: "Do you need Owner access to our Azure subscription?", a: "No. Cost Management Reader access is enough for the assessment. We only request elevated access if you move forward with implementation, under NDA." },
+    { q: "Does this replace our Azure support plan?", a: "No, it complements it. Microsoft support handles technical issues; we focus specifically on cost — commitments, rightsizing and waste." },
+    { q: "How does Azure Hybrid Benefit factor into cost savings?", a: "We check whether your on-premises Windows Server and SQL Server licenses with Software Assurance are being applied in Azure — a commonly missed discount worth 40%+ on eligible workloads." },
+    { q: "What Azure services carry the most hidden cost?", a: "Virtual Machines, managed disks and Azure SQL Database are the most common sources of overspend, typically from oversizing and missed Reserved Instance coverage." }
+  ];
+  componentDidMount() {
+    this._interval = setInterval(() => this.setState(s => ({ tick: s.tick + 1 })), 2500);
+  }
+  componentWillUnmount() {
+    clearInterval(this._interval);
+  }
+  renderVals() {
+    const s = this.state;
+    const wobble = (base, amp) => Math.round(base + Math.sin(s.tick * 0.7) * amp + (s.tick % 3) * (amp * 0.15));
+    const spend = wobble(this.base.spend, 900);
+    const vm = wobble(this.base.vm, 400);
+    const storage = wobble(this.base.storage, 150);
+    const sql = wobble(this.base.sql, 250);
+    const net = wobble(this.base.net, 120);
+    const total = vm + storage + sql + net;
+    return {
+      faqs: this.faqData.map(f => ({ q: f.q, a: f.a })),
+      spendDisplay: spend.toLocaleString(),
+      spendTrend: (8 + (s.tick % 4)).toFixed(1),
+      forecastDisplay: Math.round(spend * 1.06).toLocaleString(),
+      coveragePct: 58 + (s.tick % 6),
+      lastUpdated: 'just now',
+      vmCost: vm.toLocaleString(), vmPct: Math.round(vm / total * 100), vmTrend: (4 + (s.tick % 3)).toFixed(1),
+      storageCost: storage.toLocaleString(), storagePct: Math.round(storage / total * 100), storageTrend: (3 + (s.tick % 2)).toFixed(1),
+      sqlCost: sql.toLocaleString(), sqlPct: Math.round(sql / total * 100), sqlTrend: (6 + (s.tick % 3)).toFixed(1),
+      netCost: net.toLocaleString(), netPct: Math.round(net / total * 100), netTrend: (2 + (s.tick % 2)).toFixed(1),
+      opp1: (1800 + (s.tick % 5) * 40).toLocaleString(),
+      opp2: (3200 + (s.tick % 4) * 60).toLocaleString(),
+      opp3: (2100 + (s.tick % 3) * 50).toLocaleString(),
+      totalSavings: (10200 + (s.tick % 6) * 180).toLocaleString(),
+      forecastY: 26 - (s.tick % 4),
+      vmSqlStop: Math.round(vm / total * 100) + Math.round(sql / total * 100),
+      vmSqlStorageStop: Math.round(vm / total * 100) + Math.round(sql / total * 100) + Math.round(storage / total * 100),
+      modalOpen: s.modalOpen, submitted: s.submitted, notSubmitted: !s.submitted,
+      openModal: (e) => { if (e) e.preventDefault(); this.setState({ modalOpen: true, submitted: false }); },
+      isOtherCode: s.phoneCode === 'Other',
+      onCodeChange: (e) => this.setState({ phoneCode: e.target.value }),
+      closeModal: () => this.setState({ modalOpen: false }),
+      stopClick: (e) => e.stopPropagation(),
+      onSubmit: (e) => { e.preventDefault(); this.setState({ submitted: true }); },
+      openPlatformsMenu: () => { clearTimeout(this._t); this.setState({ menuOpen: 'platforms' }); },
+      openSolutionsMenu: () => { clearTimeout(this._t); this.setState({ menuOpen: 'solutions' }); },
+      openCompanyMenu: () => { clearTimeout(this._t); this.setState({ menuOpen: 'company' }); },
+      closeMenuSoon: () => { this._t = setTimeout(() => this.setState({ menuOpen: null }), 120); },
+      keepMenuOpen: () => clearTimeout(this._t),
+      isPlatformsOpen: s.menuOpen === 'platforms',
+      isSolutionsOpen: s.menuOpen === 'solutions',
+      isCompanyOpen: s.menuOpen === 'company',
+      toggleMobileMenu: () => this.setState(st => ({ mobileMenuOpen: !st.mobileMenuOpen })),
+      isMobileMenuOpen: s.mobileMenuOpen
+    };
+  }
+}
+</script>
+</body>
+</html>

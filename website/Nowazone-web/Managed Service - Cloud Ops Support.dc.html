@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<title>Cloud Operations Support (L1/L2) | Managed Cloud Ops — Nowazone</title>
+<meta name="description" content="L1 and L2 cloud operations support — monitoring, incident response, performance tuning and cost optimization, sized to how critical your environment is.">
+<link rel="canonical" href="https://www.nowazone.com/managed-service/cloud-ops-support">
+<meta property="og:url" content="https://www.nowazone.com/managed-service/cloud-ops-support">
+<meta property="og:title" content="Cloud Operations Support (L1/L2) | Managed Cloud Ops — Nowazone">
+<meta property="og:description" content="L1 and L2 cloud operations support — monitoring, incident response, performance tuning and cost optimization.">
+<link rel="stylesheet" href="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/styles.css">
+<script src="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/_ds_bundle.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Organization","name":"Nowazone","url":"https://www.nowazone.com","description":"FinOps as a Service and cloud cost optimization partner."},
+{"@type":"Service","serviceType":"Cloud Ops Support L1/L2","provider":{"@type":"Organization","name":"Nowazone"},"areaServed":"Worldwide","description":"L1 and L2 cloud operations support tiers — monitoring, incident response, performance tuning and cost optimization."},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Can we start with L1 and move to L2 later?","acceptedAnswer":{"@type":"Answer","text":"Yes — support tiers are matched to what your environment needs at the time, and can move from L1 to L2 as criticality or complexity changes."}},
+{"@type":"Question","name":"Does L2 include cost optimization, or is that separate?","acceptedAnswer":{"@type":"Answer","text":"L2 includes periodic cost optimization reviews. For deeper, ongoing optimization work, see FinOps as a Service."}},
+{"@type":"Question","name":"What counts as an incident requiring L2 escalation?","acceptedAnswer":{"@type":"Answer","text":"Anything beyond routine monitoring and first response — configuration changes, performance issues or complex incidents that need deeper ownership."}}
+]}
+]}
+</script>
+<style>
+:root { --font-heading: 'Helvetica Neue', Arial, sans-serif; --font-body: 'Helvetica Neue', Arial, sans-serif; }
+body { margin: 0; text-wrap: pretty; }
+a { color: #084ea3; text-decoration: none; }
+a:hover { color: #0f5bdb; }
+.nav-burger{display:none}
+@media (max-width:900px){ .nav-links{display:none !important} .nav-burger{display:flex !important} .mscos-detail{grid-template-columns:1fr !important} }
+@keyframes ctaGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(26,110,250,.55), 0 4px 14px rgba(0,0,0,.18); } 50% { box-shadow: 0 0 0 8px rgba(26,110,250,0), 0 4px 14px rgba(0,0,0,.18); } }
+</style>
+</helmet>
+
+<nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;row-gap:14px;padding:14px 32px;background:#0e1f33;position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(255,255,255,.1)">
+  <a href="Nowazone Homepage.dc.html" style="display:flex;align-items:center;margin-right:auto"><img src="uploads/Use-1.png" alt="Nowazone" style="height:38px;width:auto;display:block"></a>
+  <button type="button" class="nav-burger" onclick="{{ toggleMobileMenu }}" aria-label="Menu" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:4px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+  <div class="nav-links" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;row-gap:10px">
+  <a href="Managed Service.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Managed Service</a>
+  <a href="Cloud Migration.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Cloud Migration</a>
+  <a href="Pricing & Engagement Models.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Pricing</a>
+  </div>
+  <div style="display:flex;gap:10px;flex:none;white-space:nowrap">
+    <a href="Managed Service.dc.html#support-conversation" style="position:relative;border:none;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:2px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite;display:inline-flex;align-items:center" style-hover="transform:translateY(-2px) scale(1.03);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Talk About Ongoing Support</a>
+  </div>
+  <sc-if value="{{ isMobileMenuOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-top:1px solid rgba(255,255,255,.14);padding:8px 20px 16px;display:flex;flex-direction:column;box-shadow:0 20px 36px rgba(0,0,0,.35);z-index:50">
+    <a href="Managed Service.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">Managed Service</a>
+    <a href="Cloud Migration.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">Cloud Migration</a>
+    <a href="Pricing & Engagement Models.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px">Pricing</a>
+  </div>
+  </sc-if>
+</nav>
+
+<div style="max-width:1000px;margin:0 auto;padding:20px 40px 0"><a href="Managed Service.dc.html" style="font-size:13.5px;font-weight:600;color:#0f766e" style-hover="color:#115e59">← Managed Service</a></div>
+
+<!-- SECTION 1: HERO -->
+<section style="background:var(--color-bg);padding:44px 40px 56px">
+  <div style="max-width:900px;margin:0 auto;text-align:center">
+    <span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#0f766e;font-weight:700;font-family:var(--font-heading);background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.55);padding:6px 14px;border-radius:20px;margin-bottom:22px">Managed Service → Cloud Ops Support</span>
+    <h1 style="font-family:var(--font-heading);font-weight:700;font-size:clamp(26px,3.8vw,40px);line-height:1.15;letter-spacing:-0.01em;margin:0 0 18px">Cloud Ops Support — L1 and L2, Sized to Your Environment.</h1>
+    <p style="font-size:16px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0 auto;max-width:60ch">Not every environment needs the same level of hands-on management. Two support tiers, matched to what you're actually running.</p>
+  </div>
+</section>
+
+<!-- SECTION 2: L1 SUPPORT -->
+<section style="background:#0e1f33;padding:52px 40px">
+  <div style="max-width:1000px;margin:0 auto">
+    <h2 style="text-align:center;font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:#f2f2f3;margin:0 0 12px">L1 Support</h2>
+    <p style="text-align:center;font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.65);margin:0 auto 28px;max-width:60ch">Best for stable, lower-criticality environments that need consistent monitoring without constant hands-on management.</p>
+    <div class="mscos-detail" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:#f2f2f3;margin:0">Monitoring &amp; Alerting</h3></div>
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:#f2f2f3;margin:0">First-Response Incident Handling</h3></div>
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:#f2f2f3;margin:0">Routine Patching</h3></div>
+      <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:#f2f2f3;margin:0">Scheduled Health Checks</h3></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: L2 SUPPORT -->
+<section style="background:var(--color-bg);padding:56px 40px">
+  <div style="max-width:1000px;margin:0 auto">
+    <h2 style="text-align:center;font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);margin:0 0 12px">L2 Support</h2>
+    <p style="text-align:center;font-size:14.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0 auto 28px;max-width:60ch">Best for production environments that need active management, not just monitoring — and a clear owner when something goes beyond routine.</p>
+    <div class="mscos-detail" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:var(--color-text);margin:0">Everything in L1</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:var(--color-text);margin:0">Performance Tuning</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:var(--color-text);margin:0">Cost Optimization Reviews</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:20px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:14.5px;color:var(--color-text);margin:0">Escalation Ownership</h3></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: HOW ESCALATION WORKS -->
+<section style="background:#0e1f33;padding:52px 40px">
+  <div style="max-width:750px;margin:0 auto;text-align:center;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:36px">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:22px;color:#f2f2f3;margin:0 0 12px">How Escalation Actually Works</h2>
+    <p style="font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.65);margin:0 0 18px">L1 handles first response. Anything beyond routine escalates to L2 with full context — not a cold handoff. This escalation path is defined as part of your Cloud Operating Model before support even begins.</p>
+    <a href="Cloud Architecture - Operating Model.dc.html" style="font-weight:600;font-size:14.5px;color:#60a5fa">See how this ties to your Cloud Operating Model →</a>
+  </div>
+</section>
+
+<!-- SECTION 5: FAQ -->
+<section style="background:var(--color-bg);padding:52px 40px">
+  <div style="max-width:800px;margin:0 auto">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:var(--color-text);margin:0 0 24px">Cloud Ops Support Questions</h2>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="3">
+        <details style="border-top:1px solid var(--color-divider);padding:16px 0">
+          <summary style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);cursor:pointer">{{ f.q }}</summary>
+          <p style="font-size:13.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 70%,transparent);margin:10px 0 0">{{ f.a }}</p>
+        </details>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: CTA BANNER -->
+<section style="background:#0a1830;padding:40px 40px;text-align:center">
+  <a href="Managed Service.dc.html#support-conversation" style="font-family:var(--font-heading);font-weight:700;font-size:17px;color:#2dd4bf" style-hover="color:#14b8a6">Ready to talk about ongoing support? →</a>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0a1830;padding:40px 40px 24px;border-top:1px solid rgba(255,255,255,.1)">
+  <div style="max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+    <img src="uploads/Use-1.png" alt="Nowazone" style="height:26px;width:auto;display:block">
+    <span style="font-size:13px;color:rgba(255,255,255,.45)">© 2026 Nowazone Global Systems. All rights reserved.</span>
+  </div>
+</footer>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  faqData = [
+    { q: "Can we start with L1 and move to L2 later?", a: "Yes — support tiers are matched to what your environment needs at the time, and can move from L1 to L2 as criticality or complexity changes." },
+    { q: "Does L2 include cost optimization, or is that separate?", a: "L2 includes periodic cost optimization reviews. For deeper, ongoing optimization work, see FinOps as a Service." },
+    { q: "What counts as an incident requiring L2 escalation?", a: "Anything beyond routine monitoring and first response — configuration changes, performance issues or complex incidents that need deeper ownership." }
+  ];
+  state = { mobileMenuOpen: false };
+  renderVals() {
+    return {
+      faqs: this.faqData,
+      toggleMobileMenu: () => this.setState(s => ({ mobileMenuOpen: !s.mobileMenuOpen })),
+      isMobileMenuOpen: this.state.mobileMenuOpen
+    };
+  }
+}
+
+</script>
+</body>
+</html>

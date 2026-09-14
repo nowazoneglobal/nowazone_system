@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<title>Cloud Migration Strategy &amp; Planning | FinOps-First Cost Estimation — Nowazone</title>
+<meta name="description" content="Cloud migration strategy and planning — discovery, FinOps-based cost estimation, and wave planning before a single workload moves.">
+<link rel="canonical" href="https://www.nowazone.com/cloud-migration/strategy-planning">
+<meta property="og:url" content="https://www.nowazone.com/cloud-migration/strategy-planning">
+<meta property="og:title" content="Cloud Migration Strategy &amp; Planning | FinOps-First Cost Estimation — Nowazone">
+<meta property="og:description" content="Cloud migration strategy and planning — discovery, FinOps-based cost estimation, and wave planning before a single workload moves.">
+<link rel="stylesheet" href="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/styles.css">
+<script src="_ds/industry-6f26c59c-66e3-4edd-827b-c7ba4183e347/_ds_bundle.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"Organization","name":"Nowazone","url":"https://www.nowazone.com","description":"FinOps as a Service and cloud cost optimization partner."},
+{"@type":"Service","serviceType":"Cloud Migration Strategy & Planning","provider":{"@type":"Organization","name":"Nowazone"},"areaServed":"Worldwide","description":"Discovery, FinOps-based cost estimation, and migration wave planning before a single workload moves."},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What's included in a migration cost estimate?","acceptedAnswer":{"@type":"Answer","text":"Target-state compute and storage sizing, data egress during and after migration, temporary parallel-environment costs during cutover, licensing impact, Reserved Instance/Savings Plan strategy for the target state, and a 90-day post-migration optimization forecast."}},
+{"@type":"Question","name":"How do you account for costs during the cutover period itself?","acceptedAnswer":{"@type":"Answer","text":"We model the temporary cost of running old and new environments in parallel during cutover windows — one of the most commonly underestimated line items in a migration budget."}},
+{"@type":"Question","name":"Do you plan for licensing changes as part of the cost model?","acceptedAnswer":{"@type":"Answer","text":"Yes. Licensing impact is modeled alongside compute and storage, and connects directly into our Microsoft and Google Cloud licensing and reselling services where relevant."}}
+]}
+]}
+</script>
+<style>
+:root { --font-heading: 'Helvetica Neue', Arial, sans-serif; --font-body: 'Helvetica Neue', Arial, sans-serif; }
+body { margin: 0; text-wrap: pretty; }
+a { color: #084ea3; text-decoration: none; }
+a:hover { color: #0f5bdb; }
+.nav-burger{display:none}
+@media (max-width:900px){ .nav-links{display:none !important} .nav-burger{display:flex !important} .cmsp-grid{grid-template-columns:1fr !important} .cmsp-detail{grid-template-columns:1fr !important} }
+@keyframes ctaGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(26,110,250,.55), 0 4px 14px rgba(0,0,0,.18); } 50% { box-shadow: 0 0 0 8px rgba(26,110,250,0), 0 4px 14px rgba(0,0,0,.18); } }
+</style>
+</helmet>
+
+<nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;row-gap:14px;padding:14px 32px;background:#0e1f33;position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(255,255,255,.1)">
+  <a href="Nowazone Homepage.dc.html" style="display:flex;align-items:center;margin-right:auto"><img src="uploads/Use-1.png" alt="Nowazone" style="height:38px;width:auto;display:block"></a>
+  <button type="button" class="nav-burger" onclick="{{ toggleMobileMenu }}" aria-label="Menu" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:4px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+  <div class="nav-links" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;row-gap:10px">
+  <a href="Cloud Migration.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Cloud Migration</a>
+  <a href="FinOps.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">FinOps</a>
+  <a href="How We Work.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">How We Work</a>
+  <a href="Pricing & Engagement Models.dc.html" style="color:rgba(255,255,255,.85);font-size:13.5px;font-family:var(--font-heading);letter-spacing:.02em;white-space:nowrap">Pricing</a>
+  </div>
+  <div style="display:flex;gap:10px;flex:none;white-space:nowrap">
+    <a href="Cloud Migration.dc.html#requirement-form" style="position:relative;border:none;background:#0a63ce;color:#fff;font-family:var(--font-heading);font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:2px;cursor:pointer;transition:transform .15s ease;animation:ctaGlow 2.2s ease-in-out infinite;display:inline-flex;align-items:center" style-hover="transform:translateY(-2px) scale(1.03);background:#0f5bdb"><i class="corner tl" style="color:rgba(255,255,255,.45)"></i><i class="corner tr" style="color:rgba(255,255,255,.45)"></i><i class="corner bl" style="color:rgba(255,255,255,.45)"></i><i class="corner br" style="color:rgba(255,255,255,.45)"></i>Get a Migration Review</a>
+  </div>
+  <sc-if value="{{ isMobileMenuOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;top:100%;left:0;right:0;background:#0e1f33;border-top:1px solid rgba(255,255,255,.14);padding:8px 20px 16px;display:flex;flex-direction:column;box-shadow:0 20px 36px rgba(0,0,0,.35);z-index:50">
+    <a href="Cloud Migration.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">Cloud Migration</a>
+    <a href="FinOps.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px;border-bottom:1px solid rgba(255,255,255,.1)">FinOps</a>
+    <a href="Pricing & Engagement Models.dc.html" style="padding:14px 4px;color:#fff;font-size:14.5px">Pricing</a>
+  </div>
+  </sc-if>
+</nav>
+
+<div style="max-width:1000px;margin:0 auto;padding:20px 40px 0"><a href="Cloud Migration.dc.html" style="font-size:13.5px;font-weight:600;color:#b45309" style-hover="color:#92400e">← Cloud Migration</a></div>
+
+<!-- SECTION 1: HERO -->
+<section style="background:var(--color-bg);padding:44px 40px 56px">
+  <div style="max-width:900px;margin:0 auto;text-align:center">
+    <span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#b45309;font-weight:700;font-family:var(--font-heading);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.55);padding:6px 14px;border-radius:20px;margin-bottom:22px">Cloud Migration → Strategy &amp; Planning</span>
+    <h1 style="font-family:var(--font-heading);font-weight:700;font-size:clamp(26px,3.8vw,40px);line-height:1.15;letter-spacing:-0.01em;margin:0 0 18px">Cloud Migration Strategy &amp; Planning — Cost Modeled Before Architecture.</h1>
+    <p style="font-size:16px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0 auto;max-width:60ch">Before any architecture decision, we model what it will actually cost — including the parts most plans skip.</p>
+  </div>
+</section>
+
+<!-- SECTION 2: DISCOVERY & INVENTORY -->
+<section style="background:#0e1f33;padding:52px 40px">
+  <div style="max-width:800px;margin:0 auto;text-align:center">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:#f2f2f3;margin:0 0 14px">Discovery &amp; Inventory</h2>
+    <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,.65);margin:0">Full inventory of servers, environments, applications, databases, dependencies and network topology. Nothing moves until it's mapped.</p>
+  </div>
+</section>
+
+<!-- SECTION 3: FINOPS-FIRST COST ESTIMATION -->
+<section style="background:var(--color-bg);padding:56px 40px">
+  <div style="max-width:1000px;margin:0 auto">
+    <div style="max-width:750px;margin:0 auto 32px;text-align:center">
+      <span style="display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#b45309;font-weight:700;font-family:var(--font-heading);margin-bottom:14px">The Core of This Page</span>
+      <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);line-height:1.2;margin:0 0 16px">A FinOps-Built Cost Model, Before You Commit to a Target Architecture</h2>
+      <p style="font-size:15px;line-height:1.7;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0">Every migration plan gets a cost model before the architecture is finalized — not after. We estimate target-state compute and storage, data egress during and after migration, temporary parallel-environment costs during cutover, licensing implications, and a realistic post-migration optimization curve — so the number you're planning against is the number you actually land on.</p>
+    </div>
+    <div class="cmsp-detail" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:22px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);margin:0 0 8px">Compute &amp; Storage Sizing</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:22px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);margin:0 0 8px">Egress &amp; Data Transfer Cost</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:22px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);margin:0 0 8px">Parallel-Run Cost During Cutover Windows</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:22px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);margin:0 0 8px">Licensing Impact</h3><p style="font-size:13px;color:color-mix(in srgb,var(--color-text) 60%,transparent);margin:8px 0 0"><a href="Microsoft Licensing & Reselling.dc.html">Microsoft licensing →</a> · <a href="Google Cloud Licensing & Reselling.dc.html">Google Cloud licensing →</a></p></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:22px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);margin:0 0 8px">Reserved Instance/Savings Plan Strategy</h3></div>
+      <div style="border:1px solid var(--color-divider);border-radius:10px;padding:22px"><h3 style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-text);margin:0 0 8px">90-Day Post-Migration Optimization Forecast</h3></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: MIGRATION WAVE PLANNING -->
+<section style="background:#0e1f33;padding:52px 40px">
+  <div style="max-width:800px;margin:0 auto;text-align:center">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:#f2f2f3;margin:0 0 14px">Migration Wave Planning</h2>
+    <p style="font-size:15px;line-height:1.7;color:rgba(255,255,255,.65);margin:0">Applications and workloads grouped into waves by risk, dependency and business criticality — not migrated all at once.</p>
+  </div>
+</section>
+
+<!-- SECTION 5: LANDING ZONE CROSS-LINK -->
+<section style="background:var(--color-bg);padding:52px 40px">
+  <div style="max-width:750px;margin:0 auto;text-align:center;border:1px solid var(--color-divider);border-radius:10px;padding:36px">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:22px;margin:0 0 12px">Where This Connects to Landing Zone Design</h2>
+    <p style="font-size:14.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);margin:0 0 18px">Cost estimation and wave planning feed directly into your target landing zone — account structure, networking and identity foundation.</p>
+    <a href="Cloud Architecture.dc.html" style="font-weight:600;font-size:14.5px">See Landing Zone Design →</a>
+  </div>
+</section>
+
+<!-- SECTION 6: FAQ -->
+<section style="background:#0e1f33;padding:52px 40px">
+  <div style="max-width:800px;margin:0 auto">
+    <h2 style="font-family:var(--font-heading);font-weight:600;font-size:clamp(22px,2.6vw,28px);color:#f2f2f3;margin:0 0 24px">Strategy &amp; Planning Questions</h2>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="3">
+        <details style="border-top:1px solid rgba(255,255,255,.14);padding:16px 0">
+          <summary style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:#f2f2f3;cursor:pointer">{{ f.q }}</summary>
+          <p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.65);margin:10px 0 0">{{ f.a }}</p>
+        </details>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: CTA BANNER -->
+<section style="background:#0a1830;padding:40px 40px;text-align:center">
+  <a href="Cloud Migration.dc.html#requirement-form" style="font-family:var(--font-heading);font-weight:700;font-size:17px;color:#fbbf24" style-hover="color:#f59e0b">Ready to scope your migration? →</a>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0a1830;padding:40px 40px 24px;border-top:1px solid rgba(255,255,255,.1)">
+  <div style="max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+    <img src="uploads/Use-1.png" alt="Nowazone" style="height:26px;width:auto;display:block">
+    <span style="font-size:13px;color:rgba(255,255,255,.45)">© 2026 Nowazone Global Systems. All rights reserved.</span>
+  </div>
+</footer>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  faqData = [
+    { q: "What's included in a migration cost estimate?", a: "Target-state compute and storage sizing, data egress during and after migration, temporary parallel-environment costs during cutover, licensing impact, Reserved Instance/Savings Plan strategy for the target state, and a 90-day post-migration optimization forecast." },
+    { q: "How do you account for costs during the cutover period itself?", a: "We model the temporary cost of running old and new environments in parallel during cutover windows — one of the most commonly underestimated line items in a migration budget." },
+    { q: "Do you plan for licensing changes as part of the cost model?", a: "Yes. Licensing impact is modeled alongside compute and storage, and connects directly into our Microsoft and Google Cloud licensing and reselling services where relevant." }
+  ];
+  state = { mobileMenuOpen: false };
+  renderVals() {
+    return {
+      faqs: this.faqData,
+      toggleMobileMenu: () => this.setState(s => ({ mobileMenuOpen: !s.mobileMenuOpen })),
+      isMobileMenuOpen: this.state.mobileMenuOpen
+    };
+  }
+}
+
+</script>
+</body>
+</html>
