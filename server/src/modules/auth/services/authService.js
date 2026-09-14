@@ -672,6 +672,9 @@ class AuthService {
           client_id: clientId,
           client_secret: clientSecret,
           code: tokenOrCode.code,
+          // GitHub requires the same redirect_uri that was used in the
+          // authorization request.
+          redirect_uri: process.env.GITHUB_REDIRECT_URI || `${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'http://localhost:2424'}/portal?provider=github`,
         }),
       });
       const tokenData = await tokenRes.json();
@@ -743,7 +746,11 @@ class AuthService {
     if (!accessToken && tokenOrCode.code) {
       const clientId = process.env.LINKEDIN_CLIENT_ID;
       const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
-      const redirectUri = process.env.LINKEDIN_REDIRECT_URI || `${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'http://localhost:2424'}/auth/callback/linkedin`;
+      // Must match the redirect_uri the frontend sent in the authorization
+      // request and the URL registered in the LinkedIn app settings.
+      // LinkedIn forbids query parameters in registered redirect URLs,
+      // so this is a clean /portal URL and the provider rides in `state`.
+      const redirectUri = process.env.LINKEDIN_REDIRECT_URI || `${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'http://localhost:2424'}/portal`;
       if (!clientId || !clientSecret) {
         throw new AppError('LinkedIn sign-in is not configured', 503);
       }

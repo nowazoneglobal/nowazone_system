@@ -30,42 +30,100 @@ const contactLimiter = rateLimit({
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
+/**
+ * Detect whether MongoDB supports multi-document transactions.
+ * Standalone mongod instances do not support them; replica sets do.
+ * We cache the result after the first check to avoid repeated server-info calls.
+ */
+let _transactionsSupported = null;
+async function supportsTransactions() {
+  if (_transactionsSupported !== null) return _transactionsSupported;
+  try {
+    const admin = FormSubmission.db.db.admin();
+    const info = await admin.serverStatus();
+    // A replica set member reports repl.setName; mongos reports sharding info.
+    _transactionsSupported = Boolean(info.repl?.setName || info.sharding);
+  } catch {
+    _transactionsSupported = false;
+  }
+  return _transactionsSupported;
+}
+
+/**
+ * Core form-save logic, decoupled from the transaction wrapper.
+ * session is null when running against a standalone MongoDB.
+ */
+async function saveFormData(type, data, hash, req, session) {
+  const notifications = [];
+
+  if (data._requestId) {
+    const existing = checkReplay(
+      await FormSubmission.findOne({ requestId: data._requestId }).session(session),
+      hash,
+    );
+    if (existing) return { submission: existing, lead: null, notifications, replay: true };
+  }
+
+  const { name, email, phone, company, message, subject, page, _requestId, ...formData } = data;
+
+  const [submission] = await FormSubmission.create([{
+    type, name, email, phone: phone || undefined, company, message, subject, page,
+    formData, requestId: _requestId, requestHash: hash,
+    ipAddress: req.ip, userAgent: (req.headers['user-agent'] || '').slice(0, 1000),
+  }], session ? { session } : {});
+
+  const lead = await leadService.createLead({
+    name, email, phone: phone || undefined, company, source: 'website',
+    metadata: { formType: type, formId: submission._id, page },
+  }, { session, reuseExisting: true });
+
+  submission.leadId = lead._id;
+  await submission.save(session ? { session } : {});
+
+  const staffNotifications = await notifyStaff(
+    ['super_admin', 'admin', 'sales'],
+    {
+      title: subject || `New ${type} submission`,
+      message: `${name} submitted a ${type} form`,
+      type: 'lead', link: '/dashboard/form-submissions',
+      metadata: { formId: submission._id, leadId: lead._id },
+    },
+    session,
+  );
+  notifications.push(...staffNotifications);
+
+  return { submission, lead, notifications, replay: false };
+}
+
 function submitForm(type, limiter) {
   return [limiter, validate(schemas[type]), async (req, res, next) => {
     const data = req.validated;
     const hash = fingerprint({ type, ...data });
-    let submission;
-    let lead;
-    let notifications = [];
-    let replay = false;
+    let submission, lead, notifications = [], replay = false;
+
     try {
       await FormSubmission.init(); // Ensure the unique retry-key index is ready.
-      // Atlas / a Mongo replica set is required: never report a half-saved form.
-      await FormSubmission.db.transaction(async session => {
-        notifications = [];
-        if (data._requestId) {
-          submission = checkReplay(await FormSubmission.findOne({ requestId: data._requestId }).session(session), hash);
-          if (submission) { replay = true; return; }
-        }
-        const { name, email, phone, company, message, subject, page, _requestId, ...formData } = data;
-        [submission] = await FormSubmission.create([{
-          type, name, email, phone: phone || undefined, company, message, subject, page,
-          formData, requestId: _requestId, requestHash: hash,
-          ipAddress: req.ip, userAgent: (req.headers['user-agent'] || '').slice(0, 1000),
-        }], { session });
-        lead = await leadService.createLead({
-          name, email, phone: phone || undefined, company, source: 'website',
-          metadata: { formType: type, formId: submission._id, page },
-        }, { session, reuseExisting: true });
-        submission.leadId = lead._id;
-        await submission.save({ session });
-        notifications = await notifyStaff(['super_admin', 'admin', 'sales'], {
-          title: subject || `New ${type} submission`,
-          message: `${name} submitted a ${type} form`,
-          type: 'lead', link: '/dashboard/form-submissions',
-          metadata: { formId: submission._id, leadId: lead._id },
-        }, session);
-      });
+
+      const useTransaction = await supportsTransactions();
+
+      if (useTransaction) {
+        // Atlas / replica set path: full ACID transaction
+        await FormSubmission.db.transaction(async session => {
+          notifications = [];
+          const result = await saveFormData(type, data, hash, req, session);
+          submission = result.submission;
+          lead = result.lead;
+          notifications.push(...result.notifications);
+          replay = result.replay;
+        });
+      } else {
+        // Standalone MongoDB path: no transaction, same operations
+        const result = await saveFormData(type, data, hash, req, null);
+        submission = result.submission;
+        lead = result.lead;
+        notifications = result.notifications;
+        replay = result.replay;
+      }
     } catch (error) {
       // A concurrent retry may have committed the same unique request ID.
       if (error.code === 11000 && data._requestId) {
@@ -76,22 +134,23 @@ function submitForm(type, limiter) {
         } catch (replayError) { return next(replayError); }
       } else { return next(error); }
     }
-    let emailDelivery = 'not_repeated';
+
     if (!replay) {
       // Optional delivery must not turn a committed submission into a failure.
       try { emitNotifications(req, notifications); } catch {}
       invalidateDashboardCache().catch(() => {});
-      leadService.syncLead(lead).catch(() => {});
+      if (lead) leadService.syncLead(lead).catch(() => {});
       if (type === 'appointment') createAppointmentEventAndNotify(submission, req).catch(() => {});
       const estimate = data.resources
         ? `\nYour indicative monthly estimate: $${data.listEstimate}; governed estimate: $${data.optimizedEstimate}.\nResources: ${JSON.stringify(data.resources)}\nThese estimates are indicative, not a quote.\n`
         : '';
-      emailDelivery = await sendReceipt(data.email, 'Your Nowazone request was received',
+      await sendReceipt(data.email, 'Your Nowazone request was received',
         `Hi ${data.name},\n\nWe received your ${type} request. Reference: ${submission._id}.\n${estimate}\nOur team will follow up.\n\nNowazone`);
     }
+
     res.status(replay ? 200 : 201).json({
       status: 'success', message: 'Request received',
-      data: { id: submission._id, emailDelivery },
+      data: { id: submission._id },
     });
   }];
 }

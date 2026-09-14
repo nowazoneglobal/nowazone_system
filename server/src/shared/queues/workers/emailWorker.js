@@ -1,5 +1,5 @@
 const { Worker } = require('bullmq');
-const { createBullConnection } = require('../connection');
+const { createBullConnection, isRedisEnabled } = require('../connection');
 const {
   send2FACodeEmail,
   sendPasswordResetEmail,
@@ -8,8 +8,6 @@ const {
 } = require('../../services/emailService');
 
 const EMAIL_QUEUE_NAME = 'email';
-
-const connection = createBullConnection();
 
 async function processEmailJob(job) {
   const { type, ...payload } = job.data;
@@ -47,6 +45,14 @@ async function processEmailJob(job) {
 }
 
 function startEmailWorker() {
+  if (!isRedisEnabled()) {
+    console.log('[EmailWorker] Redis disabled: background queue worker skipped (direct in-process delivery active).');
+    return null;
+  }
+
+  const connection = createBullConnection();
+  if (!connection) return null;
+
   const worker = new Worker(EMAIL_QUEUE_NAME, processEmailJob, {
     connection,
     concurrency: 5,
@@ -65,4 +71,4 @@ function startEmailWorker() {
   return worker;
 }
 
-module.exports = { startEmailWorker };
+module.exports = { startEmailWorker, processEmailJob };

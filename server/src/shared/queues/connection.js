@@ -3,6 +3,7 @@
  * Workers require maxRetriesPerRequest: null (see BullMQ docs).
  */
 const Redis = require('ioredis');
+const { isRedisEnabled } = require('../config/redis');
 
 const connectionOptions = {
   host: process.env.REDIS_HOST || 'localhost',
@@ -13,7 +14,10 @@ const connectionOptions = {
 };
 
 function createBullConnection() {
+  if (!isRedisEnabled()) {
+    return null;
+  }
   return new Redis(connectionOptions);
 }
 
-module.exports = { connectionOptions, createBullConnection };
+module.exports = { connectionOptions, createBullConnection, isRedisEnabled };
