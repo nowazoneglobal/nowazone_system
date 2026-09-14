@@ -47,7 +47,9 @@ const registerSchema = z.object({
   password: passwordSchema,
   role: z.enum(SELF_REGISTER_ROLES, {
     errorMap: () => ({ message: `Role must be one of: ${SELF_REGISTER_ROLES.join(', ')}` }),
-  }),
+  }).default('customer'),
+  company: z.string().optional(),
+  phone: phoneOptionalSchema,
 });
 
 // Admin-only endpoint: all roles accepted; service layer enforces role-level authority
