@@ -44,17 +44,6 @@ export const AWSCostPage: React.FC = () => {
         title="AWS Cost Optimization & Cost Management Services — Nowazone"
         description="AWS cost management and optimization services — Savings Plans, rightsizing, unattached EBS volumes, and multi-account FinOps. Free AWS Cost Assessment."
         canonical="/platforms/aws"
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@graph': [
-            {
-              '@type': 'Service',
-              serviceType: 'AWS Cost Optimization',
-              provider: { '@type': 'Organization', name: 'Nowazone' },
-              description: 'AWS billing audits, Savings Plan optimization, EC2/RDS rightsizing, and multi-account cost governance.',
-            },
-          ],
-        }}
       />
 
       {/* HERO: Split Layout */}

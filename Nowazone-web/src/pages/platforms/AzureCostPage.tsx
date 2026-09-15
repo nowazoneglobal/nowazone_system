@@ -49,17 +49,6 @@ export const AzureCostPage: React.FC = () => {
         title="Azure Cost Management & Optimization Services — Nowazone"
         description="Azure cost management and optimization services — Reserved Instance gaps, oversized VMs, Azure Hybrid Benefit review. Free Azure Cost Assessment."
         canonical="/platforms/azure"
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@graph': [
-            {
-              '@type': 'Service',
-              serviceType: 'Azure Cost Optimization',
-              provider: { '@type': 'Organization', name: 'Nowazone' },
-              description: 'Azure billing audits, Reserved Instance and Savings Plan optimization, VM and SQL rightsizing.',
-            },
-          ],
-        }}
       />
 
       {/* HERO */}

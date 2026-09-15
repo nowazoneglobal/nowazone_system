@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { apiUrl } from '../api/base';
 
 export interface AuthUser {
   id: string;
@@ -25,23 +24,27 @@ interface AuthContextValue {
   isStaff: boolean;
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
-
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const STAFF_ROLES = ['super_admin', 'admin', 'hr', 'sales', 'content_creator', 'seo_manager', 'support_executive', 'finance_manager'];
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
+const STAFF_ROLES = [
+  'super_admin',
+  'admin',
+  'hr',
+  'sales',
+  'content_creator',
+  'seo_manager',
+  'support_executive',
+  'finance_manager',
+];
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
-  // Try to restore session on mount via /api/auth/profile
   const refreshUser = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/profile', { credentials: 'include' });
+      const res = await fetch(apiUrl('/api/auth/profile'), { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success') {
@@ -70,7 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(async () => {
     try {
-      await fetch('/api/auth/logout', {
+      await fetch(apiUrl('/api/auth/logout'), {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -79,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
       });
     } catch {
-      // Proceed with local logout even if server call fails
+      // local logout anyway
     } finally {
       setUser(null);
       setCsrfToken(null);
@@ -90,13 +93,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isStaff = user ? STAFF_ROLES.includes(user.role) : false;
 
   return (
-    <AuthContext.Provider value={{ user, loading, csrfToken, login, logout, refreshUser, isCustomer, isStaff }}>
+    <AuthContext.Provider
+      value={{ user, loading, csrfToken, login, logout, refreshUser, isCustomer, isStaff }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);

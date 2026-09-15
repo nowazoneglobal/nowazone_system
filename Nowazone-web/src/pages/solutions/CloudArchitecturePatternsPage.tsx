@@ -28,7 +28,7 @@ export const CloudArchitecturePatternsPage: React.FC = () => {
       <SEO
         title="Cloud Migration Architecture Patterns & Diagrams — Nowazone"
         description="Migration architecture patterns — on-premises to cloud, virtualization to cloud, cloud-to-cloud, and hybrid migration architectures."
-        canonical="/solutions/cloud-architecture-migration-patterns"
+        canonical="/solutions/cloud-architecture-patterns"
       />
 
       <div className="bg-base-100 border-b border-base-300 py-3 px-6">

@@ -70,7 +70,7 @@ export const GoogleLicensingPage: React.FC = () => {
       <SEO
         title="Google Workspace & Google Cloud Licensing Reseller — Nowazone"
         description="Google Workspace and Google Cloud licensing — procured through Google's official reseller channel, matched to real usage. Free Cost X-Ray to start."
-        canonical="https://www.nowazone.com/google-cloud-licensing-reselling"
+        canonical="/solutions/google-cloud-licensing"
       />
 
       {/* HERO */}

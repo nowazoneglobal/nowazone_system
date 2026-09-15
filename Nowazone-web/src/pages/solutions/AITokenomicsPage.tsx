@@ -62,7 +62,7 @@ export const AITokenomicsPage: React.FC = () => {
       <SEO
         title="AI Cost Optimization & Tokenomics | GPU & LLM Cost Governance — Nowazone"
         description="FinOps for AI: GPU utilization audits, token cost allocation, model rightsizing, inference cost benchmarking and agentic workload governance."
-        canonical="https://www.nowazone.com/solutions/ai-tokenomics"
+        canonical="/solutions/ai-tokenomics"
       />
 
       {/* SECTION 1: HERO */}

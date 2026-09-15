@@ -28,7 +28,7 @@ export const CloudArchitectureLandingZonePage: React.FC = () => {
       <SEO
         title="Cloud Landing Zone Design Services — Nowazone"
         description="Landing zone design — account structure, networking, identity and guardrails, built before workloads land. For AWS, Azure and Google Cloud."
-        canonical="/solutions/cloud-architecture-landing-zone-design"
+        canonical="/solutions/cloud-architecture-landing-zone"
       />
 
       <div className="bg-base-100 border-b border-base-300 py-3 px-6">

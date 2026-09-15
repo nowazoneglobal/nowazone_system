@@ -46,6 +46,7 @@ export const LegalHubPage: React.FC = () => {
       <SEO
         title="Legal | Nowazone"
         description="Nowazone legal documents — privacy policy, terms of service, security & compliance, refund policy, data processing agreement and partner terms."
+        canonical="/legal"
       />
 
       {/* Hero */}

@@ -8,6 +8,7 @@ export const DataProcessingAgreementPage: React.FC = () => {
       <SEO
         title="Data Processing Agreement | Nowazone"
         description="Contractual data processing terms for Nowazone client engagements, covering DPDP Act, GDPR SCCs, sub-processors and breach notification."
+        canonical="/data-processing-agreement"
       />
 
       {/* Header */}

@@ -11,6 +11,7 @@ export const TrustSecurityPage: React.FC = () => {
       <SEO
         title="Trust & Security | Nowazone"
         description="How Nowazone protects client data — read-only access, certified practitioners, verified Microsoft and Google partner status, and honest disclosure of what we don't have yet."
+        canonical="/trust-and-security"
       />
 
       {/* Hero */}

@@ -4,6 +4,7 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { AssessmentModal } from '../modals/AssessmentModal';
 import { AuthModal } from '../modals/AuthModal';
+import { OAuthCallback } from '../auth/OAuthCallback';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -17,6 +18,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   if (isPortal) {
     return (
       <div className="min-h-screen bg-base-100 text-base-content">
+        <OAuthCallback />
         {children}
         <AssessmentModal />
         <AuthModal />
@@ -31,6 +33,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {children}
       </main>
       <Footer />
+      <OAuthCallback />
       <AssessmentModal />
       <AuthModal />
     </div>

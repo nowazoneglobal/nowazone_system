@@ -59,14 +59,24 @@ export async function googleLogin(idToken: string): Promise<ApiResponse> {
   });
 }
 
-export async function githubLogin(payload: { code?: string; token?: string; access_token?: string }): Promise<ApiResponse> {
+export async function githubLogin(payload: {
+  code?: string;
+  token?: string;
+  access_token?: string;
+  redirect_uri?: string;
+}): Promise<ApiResponse> {
   return apiRequest('/api/auth/github', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-export async function linkedinLogin(payload: { code?: string; token?: string; access_token?: string }): Promise<ApiResponse> {
+export async function linkedinLogin(payload: {
+  code?: string;
+  token?: string;
+  access_token?: string;
+  redirect_uri?: string;
+}): Promise<ApiResponse> {
   return apiRequest('/api/auth/linkedin', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -79,14 +89,19 @@ export async function getProfile(): Promise<ApiResponse> {
   });
 }
 
-export async function updateProfile(data: Partial<{ name: string; phone: string; jobTitle: string; company: string }>): Promise<ApiResponse> {
+export async function updateProfile(
+  data: Partial<{ name: string; phone: string; jobTitle: string; company: string }>
+): Promise<ApiResponse> {
   return apiRequest('/api/auth/profile', {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
-export async function updatePassword(data: { currentPassword: string; newPassword: string }): Promise<ApiResponse> {
+export async function updatePassword(data: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<ApiResponse> {
   return apiRequest('/api/auth/profile/password', {
     method: 'PATCH',
     body: JSON.stringify(data),
@@ -98,5 +113,3 @@ export async function logoutUser(): Promise<ApiResponse> {
     method: 'POST',
   });
 }
-
-

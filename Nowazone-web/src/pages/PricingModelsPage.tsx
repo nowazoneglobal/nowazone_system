@@ -100,7 +100,7 @@ export const PricingModelsPage: React.FC = () => {
       <SEO
         title="Pricing & Engagement Models | Flat-Fee FinOps — Nowazone"
         description="Nowazone pricing — free Cost X-Ray assessment, fixed-scope diagnostics from $750, and flat-fee retainers from $1,500/mo. Never a percentage of your savings."
-        canonical="https://www.nowazone.com/pricing"
+        canonical="/pricing-models"
       />
 
       {/* HERO */}

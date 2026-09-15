@@ -23,7 +23,7 @@ export const ManagedServiceCloudOpsPage: React.FC = () => {
       <SEO
         title="Cloud Operations Support (L1/L2) | Managed Cloud Ops — Nowazone"
         description="L1 and L2 cloud operations support — monitoring, incident response, performance tuning and cost optimization, sized to how critical your environment is."
-        canonical="https://www.nowazone.com/managed-service/cloud-ops-support"
+        canonical="/solutions/managed-service-cloud-ops"
       />
 
       <div className="max-w-5xl mx-auto px-6 sm:px-10 pt-6">

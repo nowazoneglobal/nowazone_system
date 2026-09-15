@@ -49,6 +49,8 @@ export const ResetPasswordPage: React.FC = () => {
       <SEO
         title="Reset Password | Nowazone"
         description="Reset your Nowazone client portal account password."
+        canonical="/reset-password"
+        robots="noindex, nofollow"
       />
 
       <div className="max-w-md w-full p-8 rounded-2xl bg-white dark:bg-[#0E1F33] border border-slate-200 dark:border-white/10 shadow-2xl">

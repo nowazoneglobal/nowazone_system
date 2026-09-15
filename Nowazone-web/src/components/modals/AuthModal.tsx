@@ -8,9 +8,8 @@ import {
   requestPasswordReset,
   resetPassword,
   googleLogin,
-  githubLogin,
-  linkedinLogin,
 } from '../../api/auth';
+import { oauthRedirectUri } from '../../api/base';
 import { X, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
@@ -29,40 +28,15 @@ export const AuthModal: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  // Check URL query parameters for OAuth callbacks (GitHub, LinkedIn, or Google)
+  // Surface OAuth errors stored by OAuthCallback when the modal opens
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const authProvider =
-      params.get('provider') ||
-      params.get('state') ||
-      (window.location.pathname.includes('github') ? 'github' : '') ||
-      (window.location.pathname.includes('linkedin') ? 'linkedin' : '');
-
-    if (code && authProvider) {
-      setLoading(true);
-      const doOAuth =
-        authProvider === 'github'
-          ? githubLogin({ code })
-          : linkedinLogin({ code });
-
-      doOAuth
-        .then((res) => {
-          setLoading(false);
-          if (res.status === 'success' && res.data?.user) {
-            login(res.data.user, res.data.csrfToken || '');
-            window.history.replaceState({}, document.title, window.location.pathname);
-            navigate('/portal');
-          } else {
-            setError(res.message || `${authProvider} authentication failed.`);
-          }
-        })
-        .catch((err) => {
-          setLoading(false);
-          setError(err.message || 'Social authentication failed.');
-        });
+    if (!isAuthModalOpen) return;
+    const oauthErr = sessionStorage.getItem('oauth_error');
+    if (oauthErr) {
+      sessionStorage.removeItem('oauth_error');
+      setError(oauthErr);
     }
-  }, [login, navigate]);
+  }, [isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 
@@ -166,36 +140,50 @@ export const AuthModal: React.FC = () => {
   const handleGoogleSignIn = async () => {
     const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      setError('Google Sign-In is configured on the backend (/api/auth/google). To connect Google Identity directly, specify VITE_GOOGLE_CLIENT_ID in your environment.');
+      setError('Google Sign-In is not configured (missing VITE_GOOGLE_CLIENT_ID).');
       return;
     }
+
+    const waitForGoogle = async (tries = 40): Promise<boolean> => {
+      for (let i = 0; i < tries; i++) {
+        // @ts-ignore
+        if (window.google?.accounts?.id) return true;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      return false;
+    };
 
     try {
       setLoading(true);
       setError(null);
-      // @ts-ignore
-      if (window.google?.accounts?.id) {
-        // @ts-ignore
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: async (response: any) => {
-            if (response.credential) {
-              const res = await googleLogin(response.credential);
-              if (res.status === 'success' && res.data?.user) {
-                login(res.data.user, res.data.csrfToken || '');
-                closeAuthModal();
-                navigate('/portal');
-              } else {
-                setError(res.message || 'Google authentication failed.');
-              }
-            }
-          },
-        });
-        // @ts-ignore
-        window.google.accounts.id.prompt();
-      } else {
-        setError('Google Identity SDK is still loading. Please try again in a moment.');
+      const ready = await waitForGoogle();
+      if (!ready) {
+        setError('Google Sign-In failed to load. Check that accounts.google.com is reachable, then try again.');
+        return;
       }
+
+      // @ts-ignore
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: any) => {
+          if (response.credential) {
+            const res = await googleLogin(response.credential);
+            if (res.status === 'success' && res.data?.user) {
+              login(res.data.user, res.data.csrfToken || '');
+              closeAuthModal();
+              navigate('/portal');
+            } else {
+              setError(res.message || 'Google authentication failed.');
+            }
+          }
+        },
+      });
+      // @ts-ignore
+      window.google.accounts.id.prompt((notification: any) => {
+        if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+          setError('Google Sign-In was blocked or dismissed. Allow pop-ups and try again, or use email login.');
+        }
+      });
     } catch (err: any) {
       setError(err.message || 'Google Sign-In failed.');
     } finally {
@@ -206,28 +194,20 @@ export const AuthModal: React.FC = () => {
   const handleLinkedInSignIn = async () => {
     const clientId = (import.meta as any).env?.VITE_LINKEDIN_CLIENT_ID;
     if (!clientId) {
-      setError('LinkedIn OAuth is integrated on the backend (/api/auth/linkedin). To launch the OAuth redirect, specify VITE_LINKEDIN_CLIENT_ID in your environment.');
+      setError('LinkedIn Sign-In is not configured (missing VITE_LINKEDIN_CLIENT_ID).');
       return;
     }
-    // LinkedIn does not allow query parameters in registered redirect URLs,
-    // so use a clean /portal URL and pass the provider via the state parameter.
-    const redirectUri = encodeURIComponent(
-      (import.meta as any).env?.VITE_LINKEDIN_REDIRECT_URI || `${window.location.origin}/portal`
-    );
+    const redirectUri = encodeURIComponent(oauthRedirectUri('linkedin'));
     window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=linkedin&scope=openid%20profile%20email`;
   };
 
   const handleGitHubSignIn = async () => {
     const clientId = (import.meta as any).env?.VITE_GITHUB_CLIENT_ID;
     if (!clientId) {
-      setError('GitHub OAuth is integrated on the backend (/api/auth/github). To launch the OAuth redirect, specify VITE_GITHUB_CLIENT_ID in your environment.');
+      setError('GitHub Sign-In is not configured (missing VITE_GITHUB_CLIENT_ID).');
       return;
     }
-    // Must match the URL registered in the GitHub OAuth app AND the
-    // GITHUB_REDIRECT_URI the backend uses when exchanging the code.
-    const redirectUri = encodeURIComponent(
-      (import.meta as any).env?.VITE_GITHUB_REDIRECT_URI || `${window.location.origin}/portal?provider=github`
-    );
+    const redirectUri = encodeURIComponent(oauthRedirectUri('github'));
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
   };
 

@@ -28,7 +28,7 @@ export const CloudMigrationStrategyPage: React.FC = () => {
       <SEO
         title="Cloud Migration Strategy & Planning | FinOps-First Cost Estimation — Nowazone"
         description="Cloud migration strategy and planning — discovery, FinOps-based cost estimation, and wave planning before a single workload moves."
-        canonical="/solutions/cloud-migration-strategy-planning"
+        canonical="/solutions/cloud-migration-strategy"
       />
 
       {/* BACK LINK */}

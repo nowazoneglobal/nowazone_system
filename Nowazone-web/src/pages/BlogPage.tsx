@@ -162,6 +162,7 @@ export const BlogPage: React.FC = () => {
       <SEO
         title="Blog | FinOps, Cloud Cost & AI Governance Insights — Nowazone"
         description="Nowazone's blog on FinOps, cloud cost optimization, cloud migration, AI cost governance and Microsoft/Google licensing — practical guidance, not vendor fluff."
+        canonical="/blog"
       />
 
       {/* Hero + Search */}

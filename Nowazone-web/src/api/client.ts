@@ -1,3 +1,5 @@
+import { API_BASE } from './base';
+
 export interface ApiResponse<T = any> {
   status: 'success' | 'fail' | 'error';
   message?: string;
@@ -22,8 +24,11 @@ export async function apiRequest<T = any>(
     ...((options.headers as Record<string, string>) || {}),
   };
 
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${path}`;
+
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(url, {
       credentials: 'include',
       ...options,
       headers,
@@ -47,4 +52,3 @@ export async function apiRequest<T = any>(
     };
   }
 }
-

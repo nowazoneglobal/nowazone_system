@@ -8,6 +8,7 @@ export const TermsOfServicePage: React.FC = () => {
       <SEO
         title="Terms of Service | Nowazone"
         description="Terms governing your access to and use of the Nowazone website, read-only data access principles, and engagement agreements."
+        canonical="/terms-of-service"
       />
 
       {/* Header */}

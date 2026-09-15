@@ -44,17 +44,6 @@ export const GoogleCloudCostPage: React.FC = () => {
         title="Google Cloud Cost Optimization Services — Nowazone"
         description="Google Cloud cost optimization and FinOps — CUD commitments, GKE cluster rightsizing, and BigQuery query governance. Free GCP Cost Assessment."
         canonical="/platforms/google-cloud"
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@graph': [
-            {
-              '@type': 'Service',
-              serviceType: 'Google Cloud Cost Optimization',
-              provider: { '@type': 'Organization', name: 'Nowazone' },
-              description: 'GCP billing audits, Committed Use Discounts, BigQuery slot management, and GKE rightsizing.',
-            },
-          ],
-        }}
       />
 
       {/* HERO */}

@@ -28,7 +28,7 @@ export const CloudMigrationCutoverPage: React.FC = () => {
       <SEO
         title="Cloud Migration Execution & Cutover Services — Nowazone"
         description="Cloud migration execution and cutover — phased waves, defined rollback points, and minimized downtime windows."
-        canonical="/solutions/cloud-migration-execution-cutover"
+        canonical="/solutions/cloud-migration-cutover"
       />
 
       {/* BACK LINK */}

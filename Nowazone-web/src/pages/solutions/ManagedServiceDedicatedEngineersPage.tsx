@@ -23,7 +23,7 @@ export const ManagedServiceDedicatedEngineersPage: React.FC = () => {
       <SEO
         title="Dedicated Cloud Engineers | 24/7 & Time-Zone Aligned Staffing — Nowazone"
         description="Dedicated cloud engineers — staffed to your time zone or fully remote, including 24/7 coverage where your environment requires it."
-        canonical="https://www.nowazone.com/managed-service/dedicated-engineers"
+        canonical="/solutions/managed-service-dedicated-engineers"
       />
 
       <div className="max-w-5xl mx-auto px-6 sm:px-10 pt-6">

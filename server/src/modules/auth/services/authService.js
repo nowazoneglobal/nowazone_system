@@ -23,6 +23,34 @@ const hash2FACode = (code) =>
 const generate2FACode = () =>
   String(Math.floor(100000 + Math.random() * 900000));
 
+/**
+ * Prefer the redirect_uri the browser used (must be on CLIENT_URL allowlist).
+ * Falls back to env / first CLIENT_URL + pathSuffix.
+ */
+function resolveOAuthRedirectUri(requested, envFallback, pathSuffix) {
+  const allowedOrigins = String(process.env.CLIENT_URL || 'http://localhost:2424')
+    .split(',')
+    .map((s) => s.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  if (requested) {
+    try {
+      const u = new URL(requested);
+      const origin = u.origin;
+      if (allowedOrigins.includes(origin)) {
+        return requested;
+      }
+    } catch {
+      // ignore invalid URL
+    }
+  }
+
+  if (envFallback) return envFallback;
+
+  const base = allowedOrigins[0] || 'http://localhost:2424';
+  return `${base}${pathSuffix.startsWith('/') ? pathSuffix : `/${pathSuffix}`}`;
+}
+
 class AuthService {
   generateAccessToken(userId) {
     return jwt.sign(
@@ -662,6 +690,11 @@ class AuthService {
       if (!clientId || !clientSecret) {
         throw new AppError('GitHub sign-in is not configured', 503);
       }
+      const redirectUri = resolveOAuthRedirectUri(
+        tokenOrCode.redirect_uri,
+        process.env.GITHUB_REDIRECT_URI,
+        '/portal?provider=github'
+      );
       const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
@@ -672,9 +705,7 @@ class AuthService {
           client_id: clientId,
           client_secret: clientSecret,
           code: tokenOrCode.code,
-          // GitHub requires the same redirect_uri that was used in the
-          // authorization request.
-          redirect_uri: process.env.GITHUB_REDIRECT_URI || `${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'http://localhost:2424'}/portal?provider=github`,
+          redirect_uri: redirectUri,
         }),
       });
       const tokenData = await tokenRes.json();
@@ -746,11 +777,11 @@ class AuthService {
     if (!accessToken && tokenOrCode.code) {
       const clientId = process.env.LINKEDIN_CLIENT_ID;
       const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
-      // Must match the redirect_uri the frontend sent in the authorization
-      // request and the URL registered in the LinkedIn app settings.
-      // LinkedIn forbids query parameters in registered redirect URLs,
-      // so this is a clean /portal URL and the provider rides in `state`.
-      const redirectUri = process.env.LINKEDIN_REDIRECT_URI || `${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'http://localhost:2424'}/portal`;
+      const redirectUri = resolveOAuthRedirectUri(
+        tokenOrCode.redirect_uri,
+        process.env.LINKEDIN_REDIRECT_URI,
+        '/portal'
+      );
       if (!clientId || !clientSecret) {
         throw new AppError('LinkedIn sign-in is not configured', 503);
       }

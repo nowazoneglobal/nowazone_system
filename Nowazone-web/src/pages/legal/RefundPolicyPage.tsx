@@ -7,6 +7,7 @@ export const RefundPolicyPage: React.FC = () => {
       <SEO
         title="Refund Policy | Nowazone"
         description="Our policy on refunds and engagement cancellations across assessments, retainers, and licensing transactions."
+        canonical="/refund-policy"
       />
 
       {/* Header */}

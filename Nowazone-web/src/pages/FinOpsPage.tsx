@@ -104,9 +104,9 @@ export const FinOpsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-base-100 dark:bg-navy text-base-content dark:text-white transition-colors">
       <SEO
-        title="FinOps as a Service | Managed Cloud Cost Optimization — Nowazone"
-        description="Managed FinOps practice covering cost allocation, rate optimization, commitment management, and AI/GPU cost governance across AWS, Azure, Google Cloud, OCI and Alibaba Cloud, normalized to FOCUS."
-        canonical="https://www.nowazone.com/finops"
+        title="Cloud Cost Optimization | Managed FinOps Service — Nowazone"
+        description="Vendor-neutral FinOps as a service — cloud cost optimization, rate management and AI/GPU cost governance across AWS, Azure and Google Cloud. Flat fee, never a percentage of savings."
+        canonical="/finops"
       />
 
       {/* SECTION 1: HERO */}

@@ -64,7 +64,7 @@ export const ManagedServicePage: React.FC = () => {
       <SEO
         title="Managed Cloud Services | AMC Support & Dedicated Engineers — Nowazone"
         description="Managed cloud services — L1/L2 operational support and dedicated engineers, sized to your environment after migration or for ongoing cloud operations."
-        canonical="https://www.nowazone.com/managed-service"
+        canonical="/solutions/managed-service"
       />
 
       {/* SECTION 1: HERO */}

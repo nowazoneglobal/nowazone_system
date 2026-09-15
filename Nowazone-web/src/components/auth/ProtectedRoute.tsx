@@ -13,11 +13,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { openAuthModal } = useModals();
   const location = useLocation();
 
-  if (loading) {
+  const oauthPending = (() => {
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    const provider = (params.get('provider') || params.get('state') || '').toLowerCase();
+    return !!(code && (provider === 'github' || provider === 'linkedin'));
+  })();
+
+  if (loading || oauthPending) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 text-[#0F62FE] animate-spin" />
-        <p className="text-sm font-medium text-slate-500 dark:text-white/60">Verifying secure session...</p>
+        <p className="text-sm font-medium text-slate-500 dark:text-white/60">
+          {oauthPending ? 'Completing social sign-in...' : 'Verifying secure session...'}
+        </p>
       </div>
     );
   }

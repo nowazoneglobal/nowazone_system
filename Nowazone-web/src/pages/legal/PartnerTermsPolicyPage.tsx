@@ -8,6 +8,7 @@ export const PartnerTermsPolicyPage: React.FC = () => {
       <SEO
         title="Partner Terms & Policy | Nowazone"
         description="Terms governing Nowazone's partner, reseller and white-label delivery relationships."
+        canonical="/partner-terms-policy"
       />
 
       {/* Header */}

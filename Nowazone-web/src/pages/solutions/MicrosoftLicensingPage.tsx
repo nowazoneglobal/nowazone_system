@@ -105,7 +105,7 @@ export const MicrosoftLicensingPage: React.FC = () => {
       <SEO
         title="Microsoft CSP Licensing & Cloud Reseller Services — Nowazone"
         description="Microsoft CSP licensing and cloud reseller services — Microsoft 365, Azure and Copilot procurement reviewed against your actual usage. Free Cost X-Ray to start."
-        canonical="https://www.nowazone.com/microsoft-licensing-reselling"
+        canonical="/solutions/microsoft-licensing"
       />
 
       {/* HERO */}

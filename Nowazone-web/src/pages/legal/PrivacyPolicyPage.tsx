@@ -7,6 +7,7 @@ export const PrivacyPolicyPage: React.FC = () => {
       <SEO
         title="Privacy Policy | Nowazone"
         description="Nowazone Privacy Policy — How we collect, use and protect personal data under DPDP, GDPR, and CCPA."
+        canonical="/privacy-policy"
       />
 
       {/* Header */}

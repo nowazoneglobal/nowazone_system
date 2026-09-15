@@ -38,6 +38,8 @@ export const PortalLayout: React.FC = () => {
       <SEO
         title="Client Portal | Nowazone"
         description="Nowazone client portal — view your inquiries, assessments, tickets, and account details."
+        canonical="/portal"
+        robots="noindex, nofollow"
       />
 
       {/* ─────────────────── MOBILE TOP BAR ─────────────────── */}

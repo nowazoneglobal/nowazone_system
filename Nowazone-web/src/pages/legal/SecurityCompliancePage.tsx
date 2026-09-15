@@ -8,6 +8,7 @@ export const SecurityCompliancePage: React.FC = () => {
       <SEO
         title="Security & Compliance | Nowazone"
         description="How Nowazone accesses your cloud environment: NDA, MCA and SOW before any access, read-only by default, scoped and revocable permissions, breach notification and data retention."
+        canonical="/security-compliance"
       />
 
       {/* Header */}
