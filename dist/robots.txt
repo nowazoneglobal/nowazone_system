@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /portal/
-Disallow: /portal/*
-Disallow: /reset-password
-
-Sitemap: https://www.nowazone.com/sitemap.xml
