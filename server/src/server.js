@@ -4,12 +4,13 @@ require('dotenv').config();
 const REQUIRED_ENV = ['MONGODB_URI', 'JWT_ACCESS_SECRET'];
 const MISSING = REQUIRED_ENV.filter((k) => !process.env[k]);
 if (MISSING.length) {
-  console.error(`[STARTUP] Missing required environment variables: ${MISSING.join(', ')}`);
-  if (!process.env.VERCEL) process.exit(1);
+  console.error('================================================================');
+  console.error(`[CLOUD RUN STARTUP WARNING] Missing required environment variables: ${MISSING.join(', ')}`);
+  console.error('Please configure them in Cloud Run -> Edit & Deploy New Revision -> Variables & Secrets');
+  console.error('================================================================');
 }
-if ((process.env.JWT_ACCESS_SECRET || '').length < 32) {
+if ((process.env.JWT_ACCESS_SECRET || '').length > 0 && (process.env.JWT_ACCESS_SECRET || '').length < 32) {
   console.warn('[SECURITY WARNING] JWT_ACCESS_SECRET should be at least 32 characters.');
-  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) process.exit(1);
 }
 
 const express = require('express');
@@ -171,8 +172,33 @@ app.get('/api/maintenance-status', async (req, res) => {
   }
 });
 
-// ─── Health check ─────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status: 'success', message: 'Server is running', timestamp: new Date().toISOString() }));
+// ─── Health check (Cloud Run Startup & Liveness probe) ────────────────────────
+app.get('/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const isDbConnected = mongoose.connection.readyState === 1;
+  const missingEnv = REQUIRED_ENV.filter((k) => !process.env[k]);
+
+  res.status(200).json({
+    status: isDbConnected && missingEnv.length === 0 ? 'healthy' : 'degraded',
+    message: isDbConnected ? 'Nowazone API Server is online and ready' : 'Server is running in degraded mode (database disconnected or pending environment variables)',
+    database: isDbConnected ? 'connected' : (mongoose.connection.readyState === 2 ? 'connecting' : 'disconnected'),
+    missingVariables: missingEnv.length > 0 ? missingEnv : undefined,
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Guard: If MongoDB is not yet configured, return informative 503 rather than uncaught error
+app.use('/api', (req, res, next) => {
+  if (!process.env.MONGODB_URI) {
+    return res.status(503).json({
+      status: 'error',
+      message: 'Database is not yet configured. Please set MONGODB_URI in Google Cloud Run Variables & Secrets.',
+      missingConfig: ['MONGODB_URI']
+    });
+  }
+  next();
+});
 
 // ─── API routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -397,6 +423,32 @@ const PORT = parseInt(process.env.PORT, 10) || 8080;
 if (!process.env.VERCEL) {
   server.listen(PORT, '0.0.0.0', () => console.log(`[Server] running on port ${PORT} (${process.env.NODE_ENV || 'development'})`));
 }
+
+// ─── Graceful Shutdown (Cloud Run SIGTERM / SIGINT) ───────────────────────────
+const handleShutdown = (signal) => {
+  console.log(`[Cloud Run] Received ${signal}. Initiating graceful shutdown...`);
+  server.close(async () => {
+    console.log('[Cloud Run] HTTP server closed.');
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.close(false);
+        console.log('[Cloud Run] MongoDB connection closed.');
+      }
+    } catch (err) {
+      console.error('[Cloud Run] Error closing DB:', err.message);
+    }
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error('[Cloud Run] Forced shutdown timeout.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));
 
 // Vercel serverless expects 'app' directly mounted
 module.exports = process.env.VERCEL ? app : { app, io };
