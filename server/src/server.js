@@ -393,9 +393,9 @@ app.use((req, res, _next) => res.status(404).json({ status: 'fail', message: 'Ro
 app.use(errorHandler);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 8080;
 if (!process.env.VERCEL) {
-  server.listen(PORT, () => console.log(`[Server] running on port ${PORT} (${process.env.NODE_ENV || 'development'})`));
+  server.listen(PORT, '0.0.0.0', () => console.log(`[Server] running on port ${PORT} (${process.env.NODE_ENV || 'development'})`));
 }
 
 // Vercel serverless expects 'app' directly mounted
