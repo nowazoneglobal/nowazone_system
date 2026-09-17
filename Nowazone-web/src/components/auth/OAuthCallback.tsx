@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useModals } from '../context/ModalContext';
-import { githubLogin, linkedinLogin } from '../api/auth';
-import { oauthRedirectUri } from '../api/base';
+import { useAuth } from '../../context/AuthContext';
+import { useModals } from '../../context/ModalContext';
+import { githubLogin, linkedinLogin } from '../../api/auth';
+import { oauthRedirectUri } from '../../api/base';
 import { Loader2 } from 'lucide-react';
 
 function detectProvider(params: URLSearchParams): 'github' | 'linkedin' | null {

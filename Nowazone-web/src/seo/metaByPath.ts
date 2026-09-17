@@ -6,7 +6,7 @@ export const metaByPath: Record<
   '/': {
     title: 'FinOps & Cloud Cost Optimization | Nowazone',
     description:
-      'Nowazone delivers FinOps and cloud cost optimization — allocation, rate optimization and governance across AWS, Azure and Google Cloud. Flat fee, never a percentage of savings. Free Cost X-Ray to start.',
+      'Nowazone delivers multi-cloud FinOps and cost optimization across AWS, Azure, and Google Cloud with transparent flat fees. Claim your free Cost X-Ray.',
   },
   '/finops': {
     title: 'Cloud Cost Optimization | Managed FinOps Service — Nowazone',

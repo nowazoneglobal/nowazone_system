@@ -230,11 +230,11 @@ export const HowWeWorkPage: React.FC = () => {
           </div>
           <div className="flex flex-wrap gap-8 justify-center items-center pt-6 border-t border-base-300 dark:border-white/10 text-xs text-base-content/60 dark:text-white/60">
             <div className="flex items-center gap-2">
-              <img src="/assets/microsoft-partner-badge.png" alt="Microsoft Partner" className="h-6 w-auto" />
+              <img src="/assets/microsoft-partner-badge.png" alt="Microsoft Partner" width="90" height="24" loading="lazy" className="h-6 w-auto" />
               <span>Microsoft AI Cloud Partner Program</span>
             </div>
             <div className="flex items-center gap-2">
-              <img src="/assets/google-cloud-icon.png" alt="Google Cloud" className="h-6 w-6" />
+              <img src="/assets/google-cloud-icon.png" alt="Google Cloud" width="24" height="24" loading="lazy" className="h-6 w-6" />
               <span>Google Cloud Partner Network</span>
             </div>
           </div>

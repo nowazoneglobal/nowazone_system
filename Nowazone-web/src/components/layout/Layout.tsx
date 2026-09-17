@@ -28,8 +28,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="flex flex-col min-h-screen bg-base-100 text-base-content selection:bg-[#0F62FE]/20 selection:text-[#0F62FE]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-[#0F62FE] focus:text-white focus:font-semibold focus:rounded-lg focus:shadow-xl focus:outline-none"
+      >
+        Skip to main content
+      </a>
       <Navbar />
-      <main className="flex-grow pt-[72px]">
+      <main id="main-content" className="flex-grow pt-[72px]">
         {children}
       </main>
       <Footer />

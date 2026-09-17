@@ -148,7 +148,11 @@ export const Navbar: React.FC = () => {
         <Link to="/" className="flex items-center mr-2 flex-none" aria-label="Nowazone Home">
           <img
             src={theme === 'dark' ? '/nowazone_white.svg' : '/nowazone_black.svg'}
-            alt="Nowazone"
+            alt="Nowazone - FinOps & Cloud Cost Optimization"
+            width="160"
+            height="36"
+            fetchPriority="high"
+            loading="eager"
             className="h-8 sm:h-9 w-auto object-contain transition-opacity duration-200"
           />
         </Link>
@@ -374,7 +378,7 @@ export const Navbar: React.FC = () => {
                       className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
                     >
                       <div className="w-9 h-9 rounded-xl bg-slate-100/90 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 flex items-center justify-center p-1.5 flex-none group-hover:border-[#0F62FE]/50 group-hover:bg-[#0F62FE]/10 dark:group-hover:bg-[#0F62FE]/15 transition-all mt-0.5">
-                        <img src="/assets/logos/azure.png" alt="Azure" className="w-full h-full object-contain" />
+                        <img src="/assets/logos/azure.png" alt="Azure" width="24" height="24" loading="lazy" className="w-full h-full object-contain" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="block text-[13.5px] font-semibold text-slate-900 dark:text-white group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors leading-tight">
@@ -392,7 +396,7 @@ export const Navbar: React.FC = () => {
                       className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
                     >
                       <div className="w-9 h-9 rounded-xl bg-slate-100/90 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 flex items-center justify-center p-1.5 flex-none group-hover:border-[#0F62FE]/50 group-hover:bg-[#0F62FE]/10 dark:group-hover:bg-[#0F62FE]/15 transition-all mt-0.5">
-                        <img src="/assets/logos/aws.png" alt="AWS" className="w-full h-full object-contain" />
+                        <img src="/assets/logos/aws.png" alt="AWS" width="24" height="24" loading="lazy" className="w-full h-full object-contain" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="block text-[13.5px] font-semibold text-slate-900 dark:text-white group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors leading-tight">
@@ -410,7 +414,7 @@ export const Navbar: React.FC = () => {
                       className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
                     >
                       <div className="w-9 h-9 rounded-xl bg-slate-100/90 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 flex items-center justify-center p-1.5 flex-none group-hover:border-[#0F62FE]/50 group-hover:bg-[#0F62FE]/10 dark:group-hover:bg-[#0F62FE]/15 transition-all mt-0.5">
-                        <img src="/assets/logos/google-cloud.png" alt="Google Cloud" className="w-full h-full object-contain" />
+                        <img src="/assets/logos/google-cloud.png" alt="Google Cloud" width="24" height="24" loading="lazy" className="w-full h-full object-contain" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="block text-[13.5px] font-semibold text-slate-900 dark:text-white group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors leading-tight">
@@ -435,7 +439,7 @@ export const Navbar: React.FC = () => {
                       className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
                     >
                       <div className="w-9 h-9 rounded-xl bg-slate-100/90 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 flex items-center justify-center p-1 flex-none group-hover:border-[#0F62FE]/50 group-hover:bg-[#0F62FE]/10 dark:group-hover:bg-[#0F62FE]/15 transition-all mt-0.5">
-                        <img src="/assets/logos/oracle-cloud.png" alt="Oracle Cloud" className="w-full h-full object-contain" />
+                        <img src="/assets/logos/oracle-cloud.png" alt="Oracle Cloud" width="24" height="24" loading="lazy" className="w-full h-full object-contain" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="block text-[13.5px] font-semibold text-slate-900 dark:text-white group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors leading-tight">
@@ -453,7 +457,7 @@ export const Navbar: React.FC = () => {
                       className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
                     >
                       <div className="w-9 h-9 rounded-xl bg-slate-100/90 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 flex items-center justify-center p-1 flex-none group-hover:border-[#0F62FE]/50 group-hover:bg-[#0F62FE]/10 dark:group-hover:bg-[#0F62FE]/15 transition-all mt-0.5">
-                        <img src="/assets/logos/alibaba-cloud.png" alt="Alibaba Cloud" className="w-full h-full object-contain" />
+                        <img src="/assets/logos/alibaba-cloud.png" alt="Alibaba Cloud" width="24" height="24" loading="lazy" className="w-full h-full object-contain" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="block text-[13.5px] font-semibold text-slate-900 dark:text-white group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors leading-tight">
@@ -932,7 +936,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileOpen(false)}
                   className="py-1.5 px-2 rounded hover:bg-slate-100 dark:hover:bg-white/5 flex items-center gap-2"
                 >
-                  <img src="/assets/logos/azure.png" alt="Azure" className="w-4 h-4 object-contain" />
+                  <img src="/assets/logos/azure.png" alt="Azure" width="16" height="16" loading="lazy" className="w-4 h-4 object-contain" />
                   Microsoft Azure
                 </Link>
                 <Link
@@ -940,7 +944,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileOpen(false)}
                   className="py-1.5 px-2 rounded hover:bg-slate-100 dark:hover:bg-white/5 flex items-center gap-2"
                 >
-                  <img src="/assets/logos/aws.png" alt="AWS" className="w-4 h-4 object-contain" />
+                  <img src="/assets/logos/aws.png" alt="AWS" width="16" height="16" loading="lazy" className="w-4 h-4 object-contain" />
                   AWS
                 </Link>
                 <Link
@@ -948,7 +952,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileOpen(false)}
                   className="py-1.5 px-2 rounded hover:bg-slate-100 dark:hover:bg-white/5 flex items-center gap-2"
                 >
-                  <img src="/assets/logos/google-cloud.png" alt="Google Cloud" className="w-4 h-4 object-contain" />
+                  <img src="/assets/logos/google-cloud.png" alt="Google Cloud" width="16" height="16" loading="lazy" className="w-4 h-4 object-contain" />
                   Google Cloud
                 </Link>
                 <Link
@@ -956,7 +960,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileOpen(false)}
                   className="py-1.5 px-2 rounded hover:bg-slate-100 dark:hover:bg-white/5 flex items-center gap-2"
                 >
-                  <img src="/assets/logos/oracle-cloud.png" alt="Oracle" className="w-4 h-4 object-contain" />
+                  <img src="/assets/logos/oracle-cloud.png" alt="Oracle" width="16" height="16" loading="lazy" className="w-4 h-4 object-contain" />
                   Oracle Cloud (OCI)
                 </Link>
                 <Link
@@ -964,7 +968,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileOpen(false)}
                   className="py-1.5 px-2 rounded hover:bg-slate-100 dark:hover:bg-white/5 flex items-center gap-2"
                 >
-                  <img src="/assets/logos/alibaba-cloud.png" alt="Alibaba" className="w-4 h-4 object-contain" />
+                  <img src="/assets/logos/alibaba-cloud.png" alt="Alibaba" width="16" height="16" loading="lazy" className="w-4 h-4 object-contain" />
                   Alibaba Cloud
                 </Link>
                 <Link

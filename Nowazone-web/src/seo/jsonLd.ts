@@ -6,13 +6,38 @@ const org = (description: string): JsonLd => ({
   '@type': 'Organization',
   name: 'Nowazone',
   url: 'https://www.nowazone.com',
+  logo: 'https://www.nowazone.com/assets/favicon.png',
   description,
+  sameAs: [
+    'https://www.linkedin.com/company/nowazone',
+    'https://twitter.com/nowazone',
+    'https://github.com/nowazone',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    email: 'info@nowazone.com',
+    availableLanguage: ['English'],
+  },
+  knowsAbout: [
+    'FinOps',
+    'Cloud Cost Optimization',
+    'Azure Cost Management',
+    'AWS Cost Optimization',
+    'Google Cloud FinOps',
+    'AI Tokenomics & GPU Governance',
+  ],
+  publishingPrinciples: 'https://www.nowazone.com/trust-and-security',
 });
 
 const service = (serviceType: string, description: string): JsonLd => ({
   '@type': 'Service',
   serviceType,
-  provider: { '@type': 'Organization', name: 'Nowazone' },
+  provider: {
+    '@type': 'Organization',
+    name: 'Nowazone',
+    url: 'https://www.nowazone.com',
+  },
   areaServed: 'Worldwide',
   description,
 });
@@ -28,7 +53,10 @@ const faq = (items: Array<{ q: string; a: string }>): JsonLd => ({
 
 const graph = (...nodes: JsonLd[]): JsonLd => ({
   '@context': 'https://schema.org',
-  '@graph': nodes,
+  '@graph': nodes.map((node) => ({
+    '@type': (node['@type'] as string) || 'Thing',
+    ...node,
+  })),
 });
 
 export const jsonLdByPath: Record<string, JsonLd> = {

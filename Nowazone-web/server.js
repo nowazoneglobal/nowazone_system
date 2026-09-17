@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
@@ -17,10 +18,31 @@ const API_PROXY_TARGET = (process.env.API_PROXY_TARGET || 'http://127.0.0.1:5000
   ''
 );
 
+// Enable gzip/deflate text compression for improved performance and SEO audit scores
+app.use(compression());
+
+// Security Headers Middleware to satisfy all TLS and HTTP security checks
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 function proxyToApi(req, res) {
   const target = new URL(API_PROXY_TARGET);
   const transport = target.protocol === 'https:' ? https : http;
-  const headers = { ...req.headers, host: target.host };
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  const headers = {
+    ...req.headers,
+    host: target.host,
+    'x-forwarded-host': req.headers.host || '',
+    'x-forwarded-proto': req.protocol || (req.secure ? 'https' : 'http'),
+    'x-forwarded-for': clientIp,
+  };
   delete headers['content-length'];
 
   const proxyReq = transport.request(

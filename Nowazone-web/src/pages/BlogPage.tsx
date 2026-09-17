@@ -286,6 +286,9 @@ export const BlogPage: React.FC = () => {
                   <img
                     src={featured.featuredImage}
                     alt={featured.title}
+                    width="400"
+                    height="192"
+                    loading="lazy"
                     className="max-h-48 object-contain rounded-lg"
                   />
                 ) : (
@@ -318,6 +321,9 @@ export const BlogPage: React.FC = () => {
                           <img
                             src={post.featuredImage}
                             alt={post.title}
+                            width="360"
+                            height="144"
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         ) : (

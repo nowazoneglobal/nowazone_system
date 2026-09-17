@@ -51,26 +51,26 @@ export const HomePage: React.FC = () => {
 
   // ─── Credibility Pills State ────────────────────────────────────────────────
   const pillMeta = [
-    { label: 'MICROSOFT AZURE', desc: 'Azure Cost Optimization & FinOps Managed Services — governance, rightsizing and reserved capacity planning for enterprise Azure estates' },
-    { label: 'AWS', desc: 'AWS Cost Optimization, Savings Plans & Reserved Instance Management — continuous rightsizing and commitment strategy across every AWS account' },
-    { label: 'GOOGLE CLOUD', desc: 'Google Cloud (GCP) FinOps & Committed Use Discount Management — cost visibility, budgets and optimization for BigQuery, GKE and Compute workloads' },
-    { label: 'MULTI-CLOUD', desc: 'Multi-Cloud Cost Management Across Azure, AWS & GCP — one consistent FinOps practice spanning every provider you run' },
-    { label: 'FINOPS', desc: 'FinOps as a Service — Cloud Financial Management for Enterprises, from visibility and allocation through governance and continuous optimization' },
-    { label: 'CLOUD ARCHITECTURE', desc: 'Cloud Architecture Review & Cost-Efficient Design Consulting — engineering-led recommendations that reduce spend without adding risk' },
-    { label: 'AI WORKLOADS', desc: 'AI & GPU Cost Optimization for LLM and GenAI Workloads — token economics, GPU utilization and inference cost management' },
+    { label: 'MICROSOFT AZURE', desc: 'Azure financial engineering & managed services — governance, rightsizing and reserved capacity planning for enterprise Azure estates' },
+    { label: 'AWS', desc: 'AWS rate management, Savings Plans & Reserved Instance strategy — continuous rightsizing and commitment coverage across every account' },
+    { label: 'GOOGLE CLOUD', desc: 'Google Cloud (GCP) Committed Use Discount governance — spend visibility, budgets and resource efficiency for BigQuery, GKE and Compute workloads' },
+    { label: 'MULTI-CLOUD', desc: 'Cross-platform financial management across Azure, AWS & GCP — one consistent operational practice spanning every provider you run' },
+    { label: 'FINOPS', desc: 'FinOps as a Service — financial governance for modern enterprises, from visibility and allocation through continuous optimization' },
+    { label: 'CLOUD ARCHITECTURE', desc: 'Architecture review & sustainable design consulting — engineering-led recommendations that reduce overhead without adding risk' },
+    { label: 'AI WORKLOADS', desc: 'AI & GPU workload optimization for LLM and GenAI stacks — token economics, cluster utilization and inference efficiency' },
   ];
   const [activePill, setActivePill] = useState(0);
 
   // ─── 8 FinOps Capabilities State ───────────────────────────────────────────
   const capMeta = [
-    { title: 'Cloud Cost Visibility', desc: 'Normalize billing, usage and cost data across environments.', stat: '100%', statLabel: 'billing data normalized', bars: [70, 45, 88, 60] },
-    { title: 'Cost Allocation & Accountability', desc: 'Connect spend to teams, products, projects and business owners.', stat: '91%', statLabel: 'spend allocated to owners', bars: [82, 65, 40, 91] },
-    { title: 'Forecasting & Budgeting', desc: 'Build forecasts, budgets and variance tracking.', stat: '±6.4%', statLabel: 'forecast variance', bars: [55, 62, 70, 68] },
-    { title: 'Optimization', desc: 'Identify and prioritize savings opportunities across infrastructure and architecture.', stat: '$412K', statLabel: 'opportunity identified', bars: [90, 74, 58, 66] },
+    { title: 'Infrastructure Visibility', desc: 'Normalize billing, usage and telemetry data across diverse environments.', stat: '100%', statLabel: 'billing data normalized', bars: [70, 45, 88, 60] },
+    { title: 'Allocation & Accountability', desc: 'Connect infrastructure spend to teams, products, projects and business owners.', stat: '91%', statLabel: 'spend allocated to owners', bars: [82, 65, 40, 91] },
+    { title: 'Forecasting & Budgeting', desc: 'Build predictive forecasts, budgets and variance tracking.', stat: '±6.4%', statLabel: 'forecast variance', bars: [55, 62, 70, 68] },
+    { title: 'Rate Optimization', desc: 'Identify and prioritize savings opportunities across infrastructure and architecture.', stat: '$412K', statLabel: 'opportunity identified', bars: [90, 74, 58, 66] },
     { title: 'Commitment Optimization', desc: 'Evaluate reservations, savings plans and commitment-based discounts.', stat: '68%', statLabel: 'commitment coverage', bars: [68, 50, 44, 72] },
-    { title: 'Governance', desc: 'Create policies, tagging, budgets and controls.', stat: '96%', statLabel: 'tagging compliance', bars: [96, 80, 55, 62] },
-    { title: 'Unit Economics', desc: 'Connect technology cost to meaningful business metrics.', stat: '$0.042', statLabel: 'cost per transaction', bars: [40, 66, 78, 52] },
-    { title: 'FinOps Automation', desc: 'Turn recommendations into repeatable workflows and engineering action.', stat: '24', statLabel: 'automated workflows live', bars: [60, 84, 70, 90] },
+    { title: 'Policy Governance', desc: 'Create policies, tagging standards, guardrails and automated controls.', stat: '96%', statLabel: 'tagging compliance', bars: [96, 80, 55, 62] },
+    { title: 'Unit Economics', desc: 'Connect technology spend to meaningful business and product metrics.', stat: '$0.042', statLabel: 'cost per transaction', bars: [40, 66, 78, 52] },
+    { title: 'Engineering Automation', desc: 'Turn recommendations into repeatable workflows and engineering action.', stat: '24', statLabel: 'automated workflows live', bars: [60, 84, 70, 90] },
   ];
   const [activeCap, setActiveCap] = useState(0);
 
@@ -92,14 +92,35 @@ export const HomePage: React.FC = () => {
         "@type": "Organization",
         "name": "Nowazone",
         "url": "https://www.nowazone.com",
-        "description": "Nowazone delivers FinOps as a Service — multi-cloud cost optimization, AI/GPU cost management and Microsoft & Google Cloud license optimization."
+        "logo": "https://www.nowazone.com/assets/favicon.png",
+        "description": "Nowazone delivers multi-cloud FinOps and cost optimization across AWS, Azure, and Google Cloud with transparent flat fees.",
+        "sameAs": [
+          "https://www.linkedin.com/company/nowazone",
+          "https://twitter.com/nowazone",
+          "https://github.com/nowazone"
+        ],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "email": "info@nowazone.com",
+          "availableLanguage": ["English"]
+        },
+        "knowsAbout": [
+          "FinOps",
+          "Cloud Cost Optimization",
+          "Azure Cost Management",
+          "AWS Cost Optimization",
+          "Google Cloud FinOps",
+          "AI Tokenomics & GPU Governance"
+        ],
+        "publishingPrinciples": "https://www.nowazone.com/trust-and-security"
       },
       {
         "@type": "Service",
         "serviceType": "FinOps as a Service",
-        "provider": { "@type": "Organization", "name": "Nowazone" },
+        "provider": { "@type": "Organization", "name": "Nowazone", "url": "https://www.nowazone.com" },
         "areaServed": "Worldwide",
-        "description": "Cloud financial management, multi-cloud cost optimization and AI/GPU cost governance across AWS, Azure and Google Cloud."
+        "description": "Financial governance, multi-cloud cost optimization and AI/GPU workload governance across AWS, Azure and Google Cloud."
       },
       {
         "@type": "FAQPage",
@@ -145,10 +166,10 @@ export const HomePage: React.FC = () => {
     <div className="bg-base-100 text-base-content font-sans">
       <SEO
         title="FinOps & Cloud Cost Optimization | Nowazone"
-        description="Nowazone delivers FinOps and cloud cost optimization — allocation, rate optimization and governance across AWS, Azure and Google Cloud. Flat fee, never a percentage of savings. Free Cost X-Ray to start."
+        description="Nowazone delivers multi-cloud FinOps and cost optimization across AWS, Azure, and Google Cloud with transparent flat fees. Claim your free Cost X-Ray."
         canonical="https://www.nowazone.com/"
         ogTitle="FinOps & Cloud Cost Optimization | Nowazone"
-        ogDescription="Nowazone delivers FinOps and cloud cost optimization — allocation, rate optimization and governance across AWS, Azure and Google Cloud. Flat fee, never a percentage of savings."
+        ogDescription="Nowazone delivers multi-cloud FinOps and cost optimization across AWS, Azure, and Google Cloud with transparent flat fees. Claim your free Cost X-Ray."
         schema={schema}
       />
 
@@ -1269,7 +1290,7 @@ export const HomePage: React.FC = () => {
               <div className="flex gap-4 items-start p-4 border-t border-base-300">
                 <span className="font-bold text-[#0F62FE] text-base w-6">01</span>
                 <div>
-                  <h4 className="font-bold text-[15px] mb-1 text-base-content">A dedicated FinOps pod</h4>
+                  <h3 className="font-bold text-[15px] mb-1 text-base-content">A dedicated FinOps pod</h3>
                   <p className="text-[13.5px] text-base-content/70">
                     Analysts, engineers and governance leads embedded with your team, not a slow ticket queue.
                   </p>
@@ -1279,7 +1300,7 @@ export const HomePage: React.FC = () => {
               <div className="flex gap-4 items-start p-4 border-t border-base-300">
                 <span className="font-bold text-[#0F62FE] text-base w-6">02</span>
                 <div>
-                  <h4 className="font-bold text-[15px] mb-1 text-base-content">Weekly optimization cadence</h4>
+                  <h3 className="font-bold text-[15px] mb-1 text-base-content">Weekly optimization cadence</h3>
                   <p className="text-[13.5px] text-base-content/70">
                     Recurring reviews turn raw savings opportunities into shipped engineering changes and committed discounts.
                   </p>
@@ -1289,7 +1310,7 @@ export const HomePage: React.FC = () => {
               <div className="flex gap-4 items-start p-4 border-t border-b border-base-300">
                 <span className="font-bold text-[#0F62FE] text-base w-6">03</span>
                 <div>
-                  <h4 className="font-bold text-[15px] mb-1 text-base-content">Built into your workflow</h4>
+                  <h3 className="font-bold text-[15px] mb-1 text-base-content">Built into your workflow</h3>
                   <p className="text-[13.5px] text-base-content/70">
                     Direct access via Slack and your existing tooling — no separate confusing portal to check.
                   </p>
@@ -1535,6 +1556,8 @@ export const HomePage: React.FC = () => {
                 <img
                   src={`/assets/logos/${logo.file}`}
                   alt={logo.name}
+                  width="125"
+                  height="32"
                   className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto object-contain select-none"
                   loading="lazy"
                 />
@@ -1561,6 +1584,8 @@ export const HomePage: React.FC = () => {
                 <img
                   src={`/assets/logos/${logo.file}`}
                   alt={logo.name}
+                  width="125"
+                  height="32"
                   className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto object-contain select-none"
                   loading="lazy"
                 />

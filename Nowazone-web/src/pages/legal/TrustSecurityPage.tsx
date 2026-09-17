@@ -117,14 +117,14 @@ export const TrustSecurityPage: React.FC = () => {
         </div>
         <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
           <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-brand-navy flex items-center gap-4 min-w-[280px] shadow-sm">
-            <img src="/assets/microsoft-partner-badge.png" alt="Microsoft Partner" className="h-10 w-auto" />
+            <img src="/assets/microsoft-partner-badge.png" alt="Microsoft Partner" width="140" height="40" loading="lazy" className="h-10 w-auto" />
             <div>
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">Microsoft Partner</h3>
               <p className="text-xs text-gray-500 dark:text-white/60">Microsoft AI Cloud Partner Program</p>
             </div>
           </div>
           <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-brand-navy flex items-center gap-4 min-w-[280px] shadow-sm">
-            <img src="/assets/google-cloud-icon.png" alt="Google Cloud Partner" className="h-9 w-9 object-contain" />
+            <img src="/assets/google-cloud-icon.png" alt="Google Cloud Partner" width="36" height="36" loading="lazy" className="h-9 w-9 object-contain" />
             <div>
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">Google Cloud Partner Network</h3>
               <p className="text-xs text-gray-500 dark:text-white/60">Co-sell Partner</p>

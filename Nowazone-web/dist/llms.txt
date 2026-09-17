@@ -1,0 +1,26 @@
+# Nowazone
+
+> Nowazone is a vendor-neutral FinOps as a Service and multi-cloud cost optimization partner. We help enterprise and mid-market organizations maximize technology value, reduce avoidable cloud spend, and establish continuous financial engineering practices across AWS, Microsoft Azure, Google Cloud, Oracle Cloud Infrastructure (OCI), Databricks, and AI/GPU workloads.
+
+## Core Capabilities
+- **FinOps as a Service (FaaS)**: Dedicated FinOps pods delivering continuous Inform, Optimize, and Operate lifecycle governance.
+- **Multi-Cloud Cost Management**: Normalized cross-cloud cost visibility aligned with the FinOps Open Cost & Usage Specification (FOCUS 1.4).
+- **AI & GPU Tokenomics**: Token-level cost allocation, model rightsizing, inference cost benchmarking, and GPU cluster utilization audits.
+- **Licensing & Partner Procurement**: Official Microsoft CSP and Google Cloud licensing reseller optimization.
+- **Cloud Architecture & Migration**: FinOps-planned landing zones, cutover waves, and workload modernization.
+
+## Engagement & Pricing Model
+- **Free Cost X-Ray Assessment**: 24-hour diagnostic review under NDA with read-only access.
+- **Fixed Diagnostic / Retainers**: Transparent flat-fee pricing starting from $750 diagnostic or $1,500/mo retainer.
+- **Zero Percentage Cut**: We never take a percentage of client savings; pricing is fixed and predictable.
+
+## Key Links & Resources
+- [Home Page](https://www.nowazone.com/): Overview of Nowazone platform and value proposition.
+- [FinOps Services](https://www.nowazone.com/finops): Comprehensive FinOps delivery breakdown.
+- [Pricing & Models](https://www.nowazone.com/pricing-models): Transparent flat-fee engagement tiers.
+- [Azure Cost Optimization](https://www.nowazone.com/platforms/azure): Azure RI, Savings Plans, and Hybrid Benefit review.
+- [AWS Cost Optimization](https://www.nowazone.com/platforms/aws): AWS Savings Plans, compute rightsizing, and multi-account FinOps.
+- [Google Cloud Optimization](https://www.nowazone.com/platforms/google-cloud): GCP CUD commitments, BigQuery, and GKE optimization.
+- [AI Tokenomics](https://www.nowazone.com/solutions/ai-tokenomics): LLM and GPU cost governance.
+- [Trust & Security](https://www.nowazone.com/trust-and-security): Read-only access standards, NDA/MCA/SOW governance, and compliance.
+- [Blog & Insights](https://www.nowazone.com/blog): In-depth technical guides on cloud economics.

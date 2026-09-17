@@ -17,9 +17,10 @@ export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const csrfToken = getCsrfTokenFromCookie();
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
     ...((options.headers as Record<string, string>) || {}),
   };
