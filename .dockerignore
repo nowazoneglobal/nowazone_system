@@ -1,0 +1,10 @@
+node_modules
+server/node_modules
+frontend
+Nowazone-web
+Nowazone-web.zip
+.git
+.env
+server/.env
+.vscode
+.idea
