@@ -8,59 +8,67 @@ const connectDB = async () => {
       throw new Error('MONGODB_URI is undefined in .env');
     }
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB Connected');
+    console.log('✅ MongoDB Connected');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MongoDB connection error:', error.message);
     process.exit(1);
   }
 };
 
-const seedSuperAdmin = async () => {
+const resetSuperAdmin = async () => {
   try {
     await connectDB();
 
-    const email = process.env.SUPER_ADMIN_EMAIL;
-    const password = process.env.SUPER_ADMIN_PASSWORD;
+    // Support CLI arguments: node seedSuperAdmin.js <email> <password>
+    // OR environment variables: SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD
+    const args = process.argv.slice(2);
+    const email = (args[0] || process.env.SUPER_ADMIN_EMAIL || 'admin@nowazone.com').trim().toLowerCase();
+    const password = args[1] || process.env.SUPER_ADMIN_PASSWORD || 'Nowazone@Admin2026!';
 
-    if (!email || !password) {
-      console.error('❌ Please define SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD in your .env file.');
-      process.exit(1);
+    console.log(`\n🔑 Resetting/Seeding Super Admin account for: ${email}`);
+
+    let user = await User.findOne({ email }).select('+password +failedLoginAttempts +lockoutUntil');
+
+    if (user) {
+      user.password = password;
+      user.role = 'super_admin';
+      user.roles = ['super_admin'];
+      user.permissions = ['*'];
+      user.isActive = true;
+      user.failedLoginAttempts = 0;
+      user.lockoutUntil = null;
+      user.tokenInvalidBefore = new Date();
+
+      await user.save();
+      console.log(`\n🎉 SUCCESS: Super Admin password has been RESET successfully!`);
+    } else {
+      user = new User({
+        name: 'Super Admin',
+        email,
+        password,
+        role: 'super_admin',
+        roles: ['super_admin'],
+        permissions: ['*'],
+        isActive: true,
+      });
+
+      await user.save();
+      console.log(`\n🚀 SUCCESS: New Super Admin user created successfully!`);
     }
 
-    // Check if the user already exists
-    const existingUser = await User.findOne({ email });
+    console.log(`--------------------------------------------------`);
+    console.log(` Email:    ${email}`);
+    console.log(` Password: ${password}`);
+    console.log(` Role:     super_admin`);
+    console.log(` Status:   Active (Lockout cleared)`);
+    console.log(`--------------------------------------------------\n`);
 
-    if (existingUser) {
-      console.log(`✅ User with email ${email} already exists!`);
-      
-      // Ensure they have the super admin role
-      if (!existingUser.roles.includes('super_admin')) {
-        existingUser.roles.push('super_admin');
-        await existingUser.save();
-        console.log(`🆙 Upgraded existing user ${email} to super_admin.`);
-      } else {
-        console.log(`👉 This user is already a super_admin. Nothing to change.`);
-      }
-      process.exit(0);
-    }
-
-    // Create the Super Admin
-    const superAdmin = new User({
-      name: 'Super Admin',
-      email: email,
-      password: password,
-      roles: ['super_admin'],
-      permissions: ['*'], // Grants all permissions explicitly
-      isActive: true,
-    });
-
-    await superAdmin.save();
-    console.log(`🚀 Super Admin user successfully created for email: ${email}`);
+    await mongoose.connection.close();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding Super Admin:', error);
+    console.error('❌ Error resetting Super Admin:', error.message);
     process.exit(1);
   }
 };
 
-seedSuperAdmin();
+resetSuperAdmin();

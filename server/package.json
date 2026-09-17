@@ -8,6 +8,8 @@
     "seed:dashboard": "node src/scripts/seedDashboard.js",
     "seed:chatbot": "node src/scripts/chatbotFaqSeed.js",
     "seed:chatbot:clear": "node src/scripts/chatbotFaqSeed.js --clear",
+    "seed:superadmin": "node src/scripts/seedSuperAdmin.js",
+    "reset:superadmin": "node src/scripts/seedSuperAdmin.js",
     "test": "jest --runInBand --detectOpenHandles --forceExit",
     "test:watch": "jest --watch"
   },
