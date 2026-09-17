@@ -200,6 +200,37 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// ─── Root & API Welcome / Index Routes ─────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.json({
+    status: 'success',
+    name: 'Nowazone Backend API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      api: '/api',
+      maintenance: '/api/maintenance-status'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'success',
+    message: 'Nowazone REST API v1 is operational',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      posts: '/api/posts',
+      faq: '/api/faq',
+      jobs: '/api/jobs',
+      dashboard: '/api/dashboard',
+      maintenance: '/api/maintenance-status'
+    }
+  });
+});
+
 // ─── API routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
