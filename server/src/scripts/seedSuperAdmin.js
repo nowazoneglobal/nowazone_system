@@ -1,4 +1,13 @@
 require('dotenv').config();
+const dns = require('dns');
+
+// Fix for Windows / ISP DNS blocking MongoDB SRV queries (querySrv ECONNREFUSED)
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (e) {
+  // Ignore if unsupported in environment
+}
+
 const mongoose = require('mongoose');
 const User = require('../modules/auth/models/User');
 

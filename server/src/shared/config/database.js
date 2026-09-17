@@ -1,3 +1,10 @@
+const dns = require('dns');
+
+// Prevent querySrv ECONNREFUSED on networks/ISPs that do not resolve SRV records
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (e) {}
+
 const mongoose = require('mongoose');
 const ChatbotFaq = require('../../modules/chatbot/models/ChatbotFaq');
 const ChatbotConfig = require('../../modules/chatbot/models/ChatbotConfig');
