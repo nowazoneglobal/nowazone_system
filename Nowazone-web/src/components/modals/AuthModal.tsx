@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useModals } from '../../context/ModalContext';
 import { useAuth } from '../../context/AuthContext';
@@ -135,7 +135,7 @@ export const AuthModal: React.FC = () => {
 
   // ─── Social Authentication Handlers ──────────────────────────────────────────
 
-  const googleBtnContainerRef = React.useRef<HTMLDivElement>(null);
+  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
   const handleGoogleCredentialResponse = async (credential: string) => {
     setLoading(true);
