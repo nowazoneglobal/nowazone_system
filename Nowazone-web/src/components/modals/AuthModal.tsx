@@ -38,8 +38,6 @@ export const AuthModal: React.FC = () => {
     }
   }, [isAuthModalOpen]);
 
-  if (!isAuthModalOpen) return null;
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -256,6 +254,8 @@ export const AuthModal: React.FC = () => {
       </button>
     </div>
   );
+
+  if (!isAuthModalOpen) return null;
 
   return (
     <div
