@@ -69,6 +69,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = useCallback((userData: AuthUser, csrf: string) => {
     setUser(userData);
     setCsrfToken(csrf);
+    try {
+      if (csrf) window.sessionStorage?.setItem('csrf_token', csrf);
+    } catch {}
   }, []);
 
   const logout = useCallback(async () => {
@@ -86,6 +89,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setUser(null);
       setCsrfToken(null);
+      try {
+        window.sessionStorage?.removeItem('csrf_token');
+      } catch {}
     }
   }, [csrfToken]);
 

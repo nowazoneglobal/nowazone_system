@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { AppError } = require('./errorHandler');
 const User = require('../../modules/auth/models/User');
@@ -50,19 +51,62 @@ const protect = async (req, res, next) => {
   }
 };
 
-// ─── CSRF protection ──────────────────────────────────────────────────────────
-//
-// Applied globally to /api routes. The middleware is a no-op for:
-//   • Safe HTTP methods (GET, HEAD, OPTIONS)
-//   • Bearer-authenticated requests (API/mobile — token is the CSRF defense)
-//   • Unauthenticated requests (no accessToken cookie — nothing to protect)
-//
-// For cookie-authenticated web requests it enforces the double-submit pattern:
-// the browser-readable `csrf-token` cookie must match the `X-CSRF-Token` header.
+const getAllowedOrigins = () => {
+  const envOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  return Array.from(
+    new Set([
+      ...envOrigins,
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:4173',
+      'http://127.0.0.1:4173',
+      'http://localhost:2424',
+      'http://127.0.0.1:2424',
+      'https://systems.nowazone.com',
+      'https://www.nowazone.com',
+      'https://nowazone.com',
+      'https://nowazone-system.vercel.app',
+    ])
+  );
+};
+
+const isPublicRoute = (path) => {
+  const clean = (path || '').split('?')[0];
+  return (
+    clean.startsWith('/api/forms/contact') ||
+    clean.startsWith('/api/forms/assessment') ||
+    clean.startsWith('/api/forms/appointment') ||
+    clean.startsWith('/api/forms/download') ||
+    clean.startsWith('/api/subscribers/subscribe') ||
+    clean.startsWith('/api/subscribers/unsubscribe') ||
+    clean.startsWith('/api/jobs/upload-resume') ||
+    clean.startsWith('/api/jobs/public/submit-profile') ||
+    /\/api\/jobs\/[^/]+\/apply/.test(clean) ||
+    clean.startsWith('/api/auth/login') ||
+    clean.startsWith('/api/auth/register') ||
+    clean.startsWith('/api/auth/forgot-password') ||
+    clean.startsWith('/api/auth/reset-password') ||
+    clean.startsWith('/api/auth/google') ||
+    clean.startsWith('/api/auth/github') ||
+    clean.startsWith('/api/auth/linkedin') ||
+    clean.startsWith('/api/auth/refresh') ||
+    clean.startsWith('/api/auth/logout') ||
+    clean.startsWith('/api/crm/leads/public')
+  );
+};
 
 const csrfProtection = (req, res, next) => {
   // Safe methods are CSRF-immune
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+
+  // Public form submission and unauthenticated auth routes bypass CSRF
+  const reqPath = req.originalUrl || req.path || '';
+  if (isPublicRoute(reqPath)) return next();
 
   // Bearer-authenticated clients (API / mobile) handle CSRF via token secrecy
   if (req.headers.authorization?.startsWith('Bearer ')) return next();
@@ -73,22 +117,36 @@ const csrfProtection = (req, res, next) => {
   const csrfCookie  = req.cookies['csrf-token'];
   const csrfHeader  = req.headers['x-csrf-token'];
 
-  if (!csrfCookie || !csrfHeader) {
-    return next(new AppError('CSRF token missing', 403));
-  }
+  // If double-submit token pair is supplied, validate it securely
+  if (csrfCookie && csrfHeader) {
+    const cookieBuf = Buffer.from(csrfCookie);
+    const headerBuf = Buffer.from(csrfHeader);
 
-  // Constant-time comparison to prevent timing attacks
-  const cookieBuf = Buffer.from(csrfCookie);
-  const headerBuf = Buffer.from(csrfHeader);
-
-  if (
-    cookieBuf.length !== headerBuf.length ||
-    !require('crypto').timingSafeEqual(cookieBuf, headerBuf)
-  ) {
+    if (
+      cookieBuf.length === headerBuf.length &&
+      crypto.timingSafeEqual(cookieBuf, headerBuf)
+    ) {
+      return next();
+    }
     return next(new AppError('CSRF token mismatch', 403));
   }
 
-  next();
+  // For cross-origin SPAs where JavaScript cannot read cookies from a different backend domain,
+  // origin verification against allowed origins provides the CSRF defense
+  let origin = req.headers.origin;
+  if (!origin && req.headers.referer) {
+    try {
+      origin = new URL(req.headers.referer).origin;
+    } catch {
+      origin = undefined;
+    }
+  }
+
+  if (origin && getAllowedOrigins().includes(origin.toLowerCase())) {
+    return next();
+  }
+
+  return next(new AppError('CSRF token missing', 403));
 };
 
 // ─── Authorisation ─────────────────────────────────────────────────────────────
