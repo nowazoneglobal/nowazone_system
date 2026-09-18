@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { SEO } from '../components/common/SEO';
 import { useModal } from '../context/ModalContext';
 import { subscribeNewsletter } from '../api/forms';
+import { apiUrl } from '../api/base';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,7 +86,7 @@ export const BlogPage: React.FC = () => {
     try {
       const params = new URLSearchParams({ page: String(page), limit: '9' });
       if (searchTerm.trim()) params.set('search', searchTerm.trim());
-      const res = await fetch(`/api/posts/public?${params.toString()}`);
+      const res = await fetch(apiUrl(`/api/posts/public?${params.toString()}`));
       const json = await res.json();
       if (json.status === 'success') {
         setPosts(json.data ?? []);

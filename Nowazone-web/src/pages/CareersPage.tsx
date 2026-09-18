@@ -4,6 +4,7 @@ import { ArrowRight, ChevronDown, MapPin, Briefcase } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 import { CornerMarkers } from '../components/common/CornerMarkers';
 import { submitJobApplication, submitGeneralProfile, uploadResume } from '../api/forms';
+import { apiUrl } from '../api/base';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ export const CareersPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch('/api/jobs/public')
+    fetch(apiUrl('/api/jobs/public'))
       .then(r => r.json())
       .then(data => {
         if (cancelled) return;
