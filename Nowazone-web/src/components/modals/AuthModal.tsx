@@ -137,59 +137,70 @@ export const AuthModal: React.FC = () => {
 
   // ─── Social Authentication Handlers ──────────────────────────────────────────
 
-  const handleGoogleSignIn = async () => {
-    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setError('Google Sign-In is not configured (missing VITE_GOOGLE_CLIENT_ID).');
-      return;
-    }
+  const googleBtnContainerRef = React.useRef<HTMLDivElement>(null);
 
-    const waitForGoogle = async (tries = 40): Promise<boolean> => {
-      for (let i = 0; i < tries; i++) {
-        // @ts-ignore
-        if (window.google?.accounts?.id) return true;
-        await new Promise((r) => setTimeout(r, 100));
-      }
-      return false;
-    };
-
+  const handleGoogleCredentialResponse = async (credential: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const ready = await waitForGoogle();
-      if (!ready) {
-        setError('Google Sign-In failed to load. Check that accounts.google.com is reachable, then try again.');
-        return;
+      const res = await googleLogin(credential);
+      if (res.status === 'success' && res.data?.user) {
+        login(res.data.user, res.data.csrfToken || '');
+        closeAuthModal();
+        navigate('/portal');
+      } else {
+        setError(res.message || 'Google authentication failed.');
       }
-
-      // @ts-ignore
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response: any) => {
-          if (response.credential) {
-            const res = await googleLogin(response.credential);
-            if (res.status === 'success' && res.data?.user) {
-              login(res.data.user, res.data.csrfToken || '');
-              closeAuthModal();
-              navigate('/portal');
-            } else {
-              setError(res.message || 'Google authentication failed.');
-            }
-          }
-        },
-      });
-      // @ts-ignore
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
-          setError('Google Sign-In was blocked or dismissed. Allow pop-ups and try again, or use email login.');
-        }
-      });
     } catch (err: any) {
       setError(err.message || 'Google Sign-In failed.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    let checkCount = 0;
+    const checkGoogle = setInterval(() => {
+      checkCount++;
+      // @ts-ignore
+      if (window.google?.accounts?.id && googleBtnContainerRef.current) {
+        clearInterval(checkGoogle);
+        try {
+          // @ts-ignore
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (response: any) => {
+              if (response?.credential) {
+                handleGoogleCredentialResponse(response.credential);
+              }
+            },
+          });
+
+          if (googleBtnContainerRef.current) {
+            googleBtnContainerRef.current.innerHTML = '';
+            // @ts-ignore
+            window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
+              theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+              size: 'large',
+              width: 360,
+              text: 'continue_with',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+            });
+          }
+        } catch (e) {
+          console.warn('Google button render error:', e);
+        }
+      }
+      if (checkCount > 30) clearInterval(checkGoogle);
+    }, 100);
+
+    return () => clearInterval(checkGoogle);
+  }, [isAuthModalOpen, authView]);
 
   const handleLinkedInSignIn = async () => {
     const clientId = (import.meta as any).env?.VITE_LINKEDIN_CLIENT_ID;
@@ -211,37 +222,12 @@ export const AuthModal: React.FC = () => {
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
   };
 
-  // ─── Social Buttons Component (Matches HTML Source Exactly) ────────────────
+  // ─── Social Buttons Component ───────────────────────────────────────────────
 
   const renderSocialButtons = () => (
     <div className="flex flex-col gap-2.5 mb-5">
-      {/* Continue with Google */}
-      <button
-        type="button"
-        onClick={handleGoogleSignIn}
-        disabled={loading}
-        className="w-full py-2.5 px-4 rounded-lg border border-slate-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white font-heading font-semibold text-[13.5px] flex items-center justify-center gap-2.5 transition-colors cursor-pointer shadow-sm"
-      >
-        <svg width="18" height="18" viewBox="0 0 48 48">
-          <path
-            fill="#FFC107"
-            d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"
-          />
-          <path
-            fill="#FF3D00"
-            d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4c-7.6 0-14.2 4.3-17.7 10.7z"
-          />
-          <path
-            fill="#4CAF50"
-            d="M24 44c5.3 0 10.1-1.8 13.9-5.1l-6.4-5.4C29.5 35.4 26.9 36 24 36c-5.3 0-9.8-3.4-11.4-8.1l-6.6 5.1C9.7 39.6 16.3 44 24 44z"
-          />
-          <path
-            fill="#1976D2"
-            d="M43.6 20.5H42V20H24v8h11.3c-1 3-3 5.5-5.7 7l6.4 5.4C39.7 37.5 44 31.5 44 24c0-1.3-.1-2.7-.4-3.5z"
-          />
-        </svg>
-        <span>Continue with Google</span>
-      </button>
+      {/* Official Google Sign-In Button Container (FedCM & Popup Compatible) */}
+      <div ref={googleBtnContainerRef} className="w-full flex justify-center min-h-[44px]" />
 
       {/* Continue with LinkedIn */}
       <button
