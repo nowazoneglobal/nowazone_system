@@ -6,9 +6,39 @@ import { FinOpsCycleRadar } from '../components/common/FinOpsCycleRadar';
 import { Marquee } from '../components/common/Marquee';
 import { useModals } from '../context/ModalContext';
 import { ChevronRight, ArrowRight, CheckCircle2, Shield, Lock, Clock, Sparkles } from 'lucide-react';
+import { apiUrl } from '../api/base';
+
+interface HomePost {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  categories?: { name: string }[];
+}
 
 export const HomePage: React.FC = () => {
   const { openAssessmentModal } = useModals();
+
+  // ─── Real Dynamic Blog State ────────────────────────────────────────────────
+  const [latestPosts, setLatestPosts] = useState<HomePost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(apiUrl('/api/posts/public?limit=8'))
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.status === 'success' && Array.isArray(data.data)) {
+          setLatestPosts(data.data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setPostsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   // ─── Hero Live Dashboard State ──────────────────────────────────────────────
   const targets = { spend: 2480000, optOpp: 462000, savings: 324000, allocation: 84, anomalies: 7, variance: 6.4 };
@@ -2224,89 +2254,61 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Continuous Marquee Carousel of Blog Articles */}
+        {/* Dynamic Continuous Marquee Carousel of Real Blog Articles */}
         <div className="relative w-full">
-          <Marquee pauseOnHover speed={32} className="py-2">
-            {[
-              {
-                title: 'Reading Your Azure/Google Cloud Bill',
-                desc: 'What each line item actually means, and where costs hide in usage-based billing.',
-                icon: (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M6 2h9l5 5v15H6V2Z" />
-                    <path d="M9 11h6M9 15h6M9 7h3" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Landing Zones, Explained',
-                desc: 'The baseline environment that governs identity, networking and security before workloads move in.',
-                icon: (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Licensing 101: EA vs. CSP vs. Google Workspace',
-                desc: 'How the major Microsoft and Google licensing paths differ, and which fits your organization.',
-                icon: (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M8 3h6l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
-                    <path d="M14 3v5h5" />
-                    <path d="M9 14h6M9 17h4" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Cloud Cost Anomalies: What to Watch',
-                desc: 'The spend patterns that signal a misconfiguration, an unused resource, or a billing error.',
-                icon: (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M12 3 2 20h20L12 3Z" />
-                    <path d="M12 10v4" />
-                    <circle cx="12" cy="17" r="1" fill="currentColor" />
-                  </svg>
-                ),
-              },
-              {
-                title: 'Choosing a Cloud Partner vs. Going Direct',
-                desc: "What a partner adds beyond a direct vendor relationship, and when it's worth it.",
-                icon: (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="m15 9-2 6-6 2 2-6 6-2Z" />
-                  </svg>
-                ),
-              },
-            ].map((art, idx) => (
-              <div
-                key={idx}
-                className="w-[290px] sm:w-[320px] mx-3.5 flex flex-col justify-between p-6 rounded-2xl bg-base-100 dark:bg-[#0E1F33] border border-base-300 dark:border-white/10 shadow-sm hover:shadow-md hover:border-[#0F62FE]/40 transition-all flex-none group"
-              >
-                <div>
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-white/5 border border-blue-200/80 dark:border-white/10 flex items-center justify-center text-[#0F62FE] dark:text-[#60A5FA] mb-4">
-                    {art.icon}
-                  </div>
-                  <h3 className="font-heading font-semibold text-[15.5px] leading-snug text-base-content dark:text-white mb-2 group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors">
-                    {art.title}
-                  </h3>
-                  <p className="text-[13px] leading-relaxed text-base-content/70 dark:text-white/65 mb-4">
-                    {art.desc}
-                  </p>
-                </div>
-                <Link
-                  to="/blog"
-                  className="inline-flex items-center gap-1 font-heading font-semibold text-[13px] text-[#0F62FE] dark:text-[#60A5FA] group-hover:translate-x-1 transition-transform"
+          {postsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="w-8 h-8 border-2 border-[#0F62FE] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : latestPosts.length > 0 ? (
+            <Marquee pauseOnHover speed={32} className="py-2">
+              {latestPosts.map((post) => (
+                <div
+                  key={post._id}
+                  className="w-[290px] sm:w-[320px] mx-3.5 flex flex-col justify-between p-6 rounded-2xl bg-base-100 dark:bg-[#0E1F33] border border-base-300 dark:border-white/10 shadow-sm hover:shadow-md hover:border-[#0F62FE]/40 transition-all flex-none group"
                 >
-                  Read article <ArrowRight size={13} />
-                </Link>
-              </div>
-            ))}
-          </Marquee>
+                  <div>
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-white/5 border border-blue-200/80 dark:border-white/10 flex items-center justify-center text-[#0F62FE] dark:text-[#60A5FA] mb-4">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path d="M8 3h6l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+                        <path d="M14 3v5h5" />
+                        <path d="M9 14h6M9 17h4" />
+                      </svg>
+                    </div>
+                    {post.categories?.[0]?.name && (
+                      <span className="inline-block text-[11px] font-bold text-[#0F62FE] dark:text-[#60A5FA] uppercase tracking-wider mb-1.5">
+                        {post.categories[0].name}
+                      </span>
+                    )}
+                    <h3 className="font-heading font-semibold text-[15.5px] leading-snug text-base-content dark:text-white mb-2 group-hover:text-[#0F62FE] dark:group-hover:text-[#60A5FA] transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-[13px] leading-relaxed text-base-content/70 dark:text-white/65 mb-4 line-clamp-3">
+                      {post.excerpt || 'Explore practical insights on cloud cost optimization, FinOps governance, and enterprise architecture.'}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/blog?search=${encodeURIComponent(post.title)}`}
+                    className="inline-flex items-center gap-1 font-heading font-semibold text-[13px] text-[#0F62FE] dark:text-[#60A5FA] group-hover:translate-x-1 transition-transform"
+                  >
+                    Read article <ArrowRight size={13} />
+                  </Link>
+                </div>
+              ))}
+            </Marquee>
+          ) : (
+            <div className="text-center py-12 px-4 max-w-md mx-auto">
+              <p className="text-sm text-base-content/70 dark:text-white/70 mb-4">
+                No blog articles published yet. Publish your first article from the Admin Dashboard.
+              </p>
+              <Link
+                to="/blog"
+                className="inline-flex items-center gap-1.5 font-heading font-semibold text-xs text-[#0F62FE] dark:text-[#60A5FA] hover:underline"
+              >
+                Go to Blog Page <ArrowRight size={13} />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
     </div>
