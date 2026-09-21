@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SEO } from '../components/common/SEO';
 import { submitContact } from '../api/forms';
 import { CornerMarkers } from '../components/common/CornerMarkers';
-import { Mail, Clock, CheckCircle, ArrowRight, Loader2, Shield } from 'lucide-react';
+import { Mail, Clock, CheckCircle, ArrowRight, Loader2, Shield, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const ContactUsPage: React.FC = () => {
@@ -16,8 +16,7 @@ export const ContactUsPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -26,15 +25,18 @@ export const ContactUsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
+    setErrorMsg(null);
     const res = await submitContact(formData);
     setLoading(false);
     if (res.status === 'success') {
       setSubmitted(true);
     } else {
-      setSubmitted(true);
+      setErrorMsg(res.message || 'Unable to send message. Please check your information and try again.');
     }
   };
+
 
   return (
     <div className="bg-base-100 text-base-content min-h-screen">
@@ -120,12 +122,35 @@ export const ContactUsPage: React.FC = () => {
                   <CheckCircle size={36} />
                 </div>
                 <h3 className="font-heading font-bold text-2xl text-base-content mb-2">Message Sent</h3>
-                <p className="text-[14.5px] text-base-content/70 leading-relaxed max-w-sm mx-auto">
+                <p className="text-[14.5px] text-base-content/70 leading-relaxed max-w-sm mx-auto mb-6">
                   Thank you for reaching out. A FinOps specialist will review your inquiry and reply within one business day.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitted(false);
+                    setErrorMsg(null);
+                    setFormData({
+                      name: '',
+                      email: '',
+                      company: '',
+                      subject: 'Free Cost Assessment',
+                      message: '',
+                    });
+                  }}
+                  className="px-6 py-2.5 rounded-lg border border-base-300 hover:bg-base-200 text-sm font-semibold transition-colors"
+                >
+                  Send another message
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {errorMsg && (
+                  <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[12px] font-semibold uppercase tracking-wider text-base-content/70 mb-1.5">

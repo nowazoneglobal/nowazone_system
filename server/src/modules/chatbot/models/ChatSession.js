@@ -53,12 +53,45 @@ const chatSessionSchema = new mongoose.Schema(
       ref: 'Ticket',
       default: null,
     },
+    visitorName: {
+      type: String,
+      default: 'Website Visitor',
+    },
+    visitorEmail: {
+      type: String,
+      default: null,
+    },
+    visitorPhone: {
+      type: String,
+      default: null,
+    },
+    pageUrl: {
+      type: String,
+      default: '/',
+    },
+    lastMessage: {
+      type: String,
+      default: '',
+    },
+    lastMessageAt: {
+      type: Date,
+      default: Date.now,
+    },
+    unreadByAdmin: {
+      type: Number,
+      default: 0,
+    },
+    unreadByClient: {
+      type: Number,
+      default: 0,
+    },
     messages: [sessionMessageSchema],
   },
   { timestamps: true }
 );
 
-chatSessionSchema.index({ user: 1, status: 1, createdAt: -1 });
+chatSessionSchema.index({ user: 1, status: 1, lastMessageAt: -1 });
+chatSessionSchema.index({ channel: 1, status: 1, lastMessageAt: -1 });
 
 module.exports = mongoose.model('ChatSession', chatSessionSchema);
 

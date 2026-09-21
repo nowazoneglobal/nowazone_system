@@ -4,6 +4,9 @@ const settingsController = require('../controllers/settingsController');
 
 const router = express.Router();
 
+// Public: get client-safe settings (e.g. WhatsApp, site name, maintenance mode)
+router.get('/public', settingsController.getPublicSettings);
+
 // Only admins can read/update global settings or download backups
 router.use(protect, restrictTo('admin', 'super_admin'));
 

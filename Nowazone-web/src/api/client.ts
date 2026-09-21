@@ -41,21 +41,40 @@ export async function apiRequest<T = any>(
       headers,
     });
 
-    const data = await response.json();
+    let data: any;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        data = { message: `Invalid JSON response from server (HTTP ${response.status})` };
+      }
+    } else {
+      try {
+        const text = await response.text();
+        data = { message: text || `Request failed with status ${response.status}` };
+      } catch {
+        data = { message: `Request failed with status ${response.status}` };
+      }
+    }
 
-    if (!response.ok) {
+    if (!response.ok || data?.status === 'fail' || data?.status === 'error') {
+      const errorMsg = data?.message || (data?.errors && data.errors[0]?.message) || `Request failed with status ${response.status}`;
+      console.warn(`[API Failure] ${options.method || 'GET'} ${path} (HTTP ${response.status}):`, errorMsg, data?.errors || '');
       return {
         status: 'error',
-        message: data.message || `Request failed with status ${response.status}`,
-        errors: data.errors,
+        message: errorMsg,
+        errors: data?.errors,
       };
     }
 
     return data;
   } catch (err: any) {
+    console.error(`[API Network Error] ${options.method || 'GET'} ${path}:`, err);
     return {
       status: 'error',
-      message: err.message || 'Network error. Please try again later.',
+      message: err.message || 'Network error. Please check your connection and try again.',
     };
   }
 }
+

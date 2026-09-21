@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useModals } from '../../context/ModalContext';
 import { submitAssessment } from '../../api/forms';
 import { CornerMarkers } from '../common/CornerMarkers';
-import { X, CheckCircle, Loader2 } from 'lucide-react';
+import { X, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 export const AssessmentModal: React.FC = () => {
   const { isAssessmentModalOpen, closeAssessmentModal } = useModals();
@@ -34,23 +34,24 @@ export const AssessmentModal: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     setErrorMsg(null);
 
-    const fullPhone = formData.phone
+    const fullPhone = formData.phone.trim()
       ? `${formData.phoneCode === 'Other' ? formData.otherCode : formData.phoneCode} ${formData.phone}`.trim()
       : undefined;
 
     const res = await submitAssessment({
-      name: formData.name || formData.email.split('@')[0],
-      email: formData.email,
-      company: formData.company,
+      name: formData.name.trim() || formData.email.split('@')[0],
+      email: formData.email.trim(),
+      company: formData.company.trim() || undefined,
       phone: fullPhone,
-      jobTitle: formData.jobTitle || undefined,
+      jobTitle: formData.jobTitle.trim() || undefined,
       platform: formData.platform,
       spend: formData.spend,
       model: formData.model,
-      message: formData.message || undefined,
+      message: formData.message.trim() || undefined,
     });
 
     setIsSubmitting(false);
@@ -58,10 +59,10 @@ export const AssessmentModal: React.FC = () => {
     if (res.status === 'success') {
       setSubmitted(true);
     } else {
-      // In local dev without active backend or simulation, gracefully show success receipt
-      setSubmitted(true);
+      setErrorMsg(res.message || 'Unable to submit assessment request. Please check your information and try again.');
     }
   };
+
 
   const handleResetAndClose = () => {
     setSubmitted(false);
@@ -321,7 +322,10 @@ export const AssessmentModal: React.FC = () => {
                 </div>
 
                 {errorMsg && (
-                  <div className="text-red-500 text-xs">{errorMsg}</div>
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
                 )}
 
                 <button

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Globe, Shield, Bell, Database, Save, ChevronRight, Download } from 'lucide-react';
+import { Settings, Globe, Shield, Bell, Database, Save, ChevronRight, Download, MessageSquare } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/lib/api';
 import { useTheme } from 'next-themes';
@@ -17,6 +17,7 @@ interface SettingSection {
 
 const SECTIONS: SettingSection[] = [
   { id: 'general', label: 'General', Icon: Settings, iconColor: 'var(--accent)', description: 'Site name, timezone, and basic settings' },
+  { id: 'whatsapp', label: 'WhatsApp & Live Chat', Icon: MessageSquare, iconColor: '#25D366', description: 'WhatsApp business number, automated greetings, and floating widget' },
   { id: 'security', label: 'Security', Icon: Shield, iconColor: 'var(--error)', description: 'Authentication, 2FA, and access control' },
   { id: 'notifications', label: 'Notifications', Icon: Bell, iconColor: 'var(--accent)', description: 'Email alerts and push notification preferences' },
   { id: 'seo', label: 'SEO & Meta', Icon: Globe, iconColor: 'var(--success)', description: 'Default meta tags, sitemap, and indexing rules' },
@@ -26,6 +27,17 @@ const SECTIONS: SettingSection[] = [
 const GENERAL_DEFAULTS = {
   siteName: 'NowAZone', tagline: 'Enterprise Console', timezone: 'Asia/Kolkata',
   language: 'en', dateFormat: 'DD/MM/YYYY', currency: 'USD',
+};
+
+const WHATSAPP_DEFAULTS = {
+  enabled: true,
+  phoneNumber: '18005550199',
+  displayNumber: '+1 (800) 555-0199',
+  defaultMessage: 'Hi Nowazone team! I would like to inquire about cloud FinOps and cost optimization.',
+  widgetPosition: 'bottom-right',
+  agentName: 'Nowazone FinOps Desk',
+  greetingMessage: 'Hi there! 👋 Need help with cloud costs, FinOps, or migration? Chat with our team directly on WhatsApp or right here.',
+  allowInBrowserChat: true,
 };
 
 const SECURITY_DEFAULTS = {
@@ -86,6 +98,7 @@ async function getErrorMessageFromBlobResponse(error: any): Promise<string> {
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [general, setGeneral]     = useState(GENERAL_DEFAULTS);
+  const [whatsapp, setWhatsapp]   = useState(WHATSAPP_DEFAULTS);
   const [security, setSecurity]   = useState(SECURITY_DEFAULTS);
   const [notif, setNotif]         = useState(NOTIF_DEFAULTS);
   const [seo, setSeo]             = useState(SEO_DEFAULTS);
@@ -111,6 +124,19 @@ export default function SettingsPage() {
           dateFormat: settings.dateFormat,
           currency: settings.currency,
         });
+
+        if (settings.whatsapp) {
+          setWhatsapp({
+            enabled: settings.whatsapp.enabled ?? WHATSAPP_DEFAULTS.enabled,
+            phoneNumber: settings.whatsapp.phoneNumber || WHATSAPP_DEFAULTS.phoneNumber,
+            displayNumber: settings.whatsapp.displayNumber || WHATSAPP_DEFAULTS.displayNumber,
+            defaultMessage: settings.whatsapp.defaultMessage || WHATSAPP_DEFAULTS.defaultMessage,
+            widgetPosition: settings.whatsapp.widgetPosition || WHATSAPP_DEFAULTS.widgetPosition,
+            agentName: settings.whatsapp.agentName || WHATSAPP_DEFAULTS.agentName,
+            greetingMessage: settings.whatsapp.greetingMessage || WHATSAPP_DEFAULTS.greetingMessage,
+            allowInBrowserChat: settings.whatsapp.allowInBrowserChat ?? WHATSAPP_DEFAULTS.allowInBrowserChat,
+          });
+        }
         
         setSecurity({
           sessionTimeout: settings.security.sessionTimeout,
@@ -134,8 +160,6 @@ export default function SettingsPage() {
           generateSitemap: settings.seo.generateSitemap,
           allowIndexing: settings.seo.allowIndexing,
         });
-        
-        
         
         setSystem({
           maintenanceMode: settings.system.maintenanceMode,
@@ -184,13 +208,14 @@ export default function SettingsPage() {
       link.download = filename;
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success('Backup download started');
+      toast.success('Backup snapshot downloaded');
     } catch (error: any) {
-      const message = await getErrorMessageFromBlobResponse(error);
-      toast.error(message);
+      console.error('Error downloading backup:', error);
+      const msg = await getErrorMessageFromBlobResponse(error);
+      toast.error(msg);
     } finally {
       setDownloadingBackup(false);
     }
@@ -207,6 +232,16 @@ export default function SettingsPage() {
           language: general.language,
           dateFormat: general.dateFormat,
           currency: general.currency,
+        },
+        whatsapp: {
+          enabled: whatsapp.enabled,
+          phoneNumber: whatsapp.phoneNumber,
+          displayNumber: whatsapp.displayNumber,
+          defaultMessage: whatsapp.defaultMessage,
+          widgetPosition: whatsapp.widgetPosition,
+          agentName: whatsapp.agentName,
+          greetingMessage: whatsapp.greetingMessage,
+          allowInBrowserChat: whatsapp.allowInBrowserChat,
         },
         security: {
           sessionTimeout: security.sessionTimeout,
@@ -228,7 +263,6 @@ export default function SettingsPage() {
           generateSitemap: seo.generateSitemap,
           allowIndexing: seo.allowIndexing,
         },
-
         system: {
           maintenanceMode: system.maintenanceMode,
           maxFileSize: system.maxFileSize,
@@ -242,8 +276,6 @@ export default function SettingsPage() {
       };
       
       await api.patch('/settings', payload);
-      
-      
       toast.success('Settings saved successfully');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -255,36 +287,42 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto" style={{ borderColor: 'var(--accent)' }}></div>
-          <p className="mt-4" style={{ color: 'var(--text-primary)' }}>Loading settings...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }} />
       </div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
-      className="p-6 min-h-screen" style={{ backgroundColor: 'var(--bg)', color: 'var(--text-primary)' }}>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-3">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6" style={{ backgroundColor: 'var(--bg)', color: 'var(--text-primary)', minHeight: '100vh', padding: '1.5rem' }}>
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-black tracking-tight flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
           <div className="p-2 rounded-xl" style={{ backgroundColor: 'var(--accent-subtle)' }}><Settings size={22} style={{ color: 'var(--accent)' }} /></div>
           Settings
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Configure your enterprise console preferences</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Manage your workspace preferences, security policies, WhatsApp & live chat, and system configuration</p>
       </div>
 
-      <div className="flex gap-6">
-        {/* Sidebar Navigation */}
-        <div className="w-56 flex-shrink-0">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Navigation Sidebar */}
+        <div className="lg:col-span-1">
           <nav className="space-y-1">
-            {SECTIONS.map(section => (
-              <button key={section.id} onClick={() => setActiveSection(section.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left border cursor-pointer"
-                style={activeSection === section.id
-                  ? { backgroundColor: 'var(--accent-subtle)', color: 'var(--accent-text)', borderColor: 'var(--accent-border)' }
-                  : { backgroundColor: 'var(--surface)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
+            {SECTIONS.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-all ${
+                  activeSection === section.id
+                    ? 'shadow-sm'
+                    : 'hover:bg-opacity-50'
+                }`}
+                style={{
+                  backgroundColor: activeSection === section.id ? 'var(--surface)' : 'transparent',
+                  color: activeSection === section.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  borderLeft: activeSection === section.id ? `3px solid ${section.iconColor}` : '3px solid transparent',
+                }}
+              >
                 <span style={{ color: activeSection === section.id ? section.iconColor : 'var(--text-muted)' }}><section.Icon size={16} /></span>
                 {section.label}
                 {activeSection === section.id && <span className="ml-auto" style={{ color: 'var(--accent-text)' }}><ChevronRight size={12} /></span>}
@@ -294,7 +332,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Settings Content */}
-        <div className="flex-1">
+        <div className="flex-1 lg:col-span-3">
           <motion.div key={activeSection} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
             className="border rounded-2xl p-6"
             style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
@@ -329,6 +367,147 @@ export default function SettingsPage() {
                       {['USD', 'EUR', 'GBP', 'INR', 'AUD'].map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'whatsapp' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="font-bold text-lg flex items-center gap-2">
+                    <span className="p-1 rounded-lg bg-[#25D366]/20 text-[#25D366]"><MessageSquare size={18} /></span>
+                    <span>WhatsApp & Floating Chat Widget</span>
+                  </h2>
+                  <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    Configure the live WhatsApp phone number, greeting message, and in-browser chat widget shown to website visitors.
+                  </p>
+                </div>
+
+                {/* Main Toggle Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border flex items-center justify-between" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)' }}>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Enable Floating Widget</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Display WhatsApp badge on landing pages</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={whatsapp.enabled}
+                        onChange={e => setWhatsapp(p => ({ ...p, enabled: e.target.checked }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#25D366]"></div>
+                    </label>
+                  </div>
+
+                  <div className="p-4 rounded-xl border flex items-center justify-between" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)' }}>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Allow In-Browser Live Chat</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Let visitors chat directly on website</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={whatsapp.allowInBrowserChat}
+                        onChange={e => setWhatsapp(p => ({ ...p, allowInBrowserChat: e.target.checked }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0F62FE]"></div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Form Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      WhatsApp Phone Number (E.164 Clean Digits) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={whatsapp.phoneNumber}
+                      onChange={e => setWhatsapp(p => ({ ...p, phoneNumber: e.target.value.replace(/[^\d]/g, '') }))}
+                      placeholder="18005550199"
+                      className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none font-mono"
+                      style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    />
+                    <span className="text-[11px] block mt-1" style={{ color: 'var(--text-muted)' }}>
+                      Enter international digits without +, dashes, or spaces (e.g., 18005550199).
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      Display Number Label
+                    </label>
+                    <input
+                      type="text"
+                      value={whatsapp.displayNumber}
+                      onChange={e => setWhatsapp(p => ({ ...p, displayNumber: e.target.value }))}
+                      placeholder="+1 (800) 555-0199"
+                      className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none"
+                      style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      Support Agent / Desk Name
+                    </label>
+                    <input
+                      type="text"
+                      value={whatsapp.agentName}
+                      onChange={e => setWhatsapp(p => ({ ...p, agentName: e.target.value }))}
+                      placeholder="Nowazone FinOps Desk"
+                      className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none"
+                      style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      Widget Position on Screen
+                    </label>
+                    <select
+                      value={whatsapp.widgetPosition}
+                      onChange={e => setWhatsapp(p => ({ ...p, widgetPosition: e.target.value as any }))}
+                      className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none"
+                      style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="bottom-right">Bottom Right (Standard)</option>
+                      <option value="bottom-left">Bottom Left</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                    Widget Greeting Message
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={whatsapp.greetingMessage}
+                    onChange={e => setWhatsapp(p => ({ ...p, greetingMessage: e.target.value }))}
+                    placeholder="Hi there! 👋 Need help with cloud costs, FinOps, or migration? Chat with our team directly on WhatsApp or right here."
+                    className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none resize-none"
+                    style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                    Default WhatsApp Message Template
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={whatsapp.defaultMessage}
+                    onChange={e => setWhatsapp(p => ({ ...p, defaultMessage: e.target.value }))}
+                    placeholder="Hi Nowazone team! I would like to inquire about cloud FinOps and cost optimization."
+                    className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none resize-none"
+                    style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                  />
                 </div>
               </div>
             )}

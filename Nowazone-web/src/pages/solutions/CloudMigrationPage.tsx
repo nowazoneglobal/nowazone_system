@@ -4,12 +4,14 @@ import { SEO } from '../../components/common/SEO';
 import { CornerMarkers } from '../../components/common/CornerMarkers';
 import { useModal } from '../../context/ModalContext';
 import { submitAssessment } from '../../api/forms';
-import { CheckCircle2, ArrowRight, ShieldAlert, Layers, Activity, Server, Clock } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ShieldAlert, Layers, Activity, Server, Clock, AlertCircle, Loader2 } from 'lucide-react';
 
 export const CloudMigrationPage: React.FC = () => {
   const { openAssessmentModal } = useModal();
 
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     workEmail: '',
@@ -25,24 +27,33 @@ export const CloudMigrationPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    setErrorMsg(null);
     try {
-      await submitAssessment({
-        name: formData.fullName,
-        email: formData.workEmail,
-        company: formData.company,
-        phone: formData.phone,
+      const res = await submitAssessment({
+        name: formData.fullName.trim(),
+        email: formData.workEmail.trim(),
+        company: formData.company.trim(),
+        phone: formData.phone.trim() || undefined,
         platform: formData.targetPlatform,
         spend: `${formData.vmCount} VMs`,
         model: 'Cloud Migration Requirement Review',
-        message: `Current: ${formData.currentEnv}. Target: ${formData.targetPlatform}. Apps: ${formData.criticalApps}. Timeframe: ${formData.timeframe}. Notes: ${formData.notes}`,
+        message: `Current: ${formData.currentEnv}. Target: ${formData.targetPlatform}. Apps: ${formData.criticalApps}. Timeframe: ${formData.timeframe}. Notes: ${formData.notes}`.trim(),
         page: '/solutions/cloud-migration',
       });
-      setFormSubmitted(true);
-    } catch (err) {
-      console.error(err);
-      setFormSubmitted(true);
+      if (res.status === 'success') {
+        setFormSubmitted(true);
+      } else {
+        setErrorMsg(res.message || 'Unable to submit migration requirements. Please check your information and try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error. Please try again later.');
+    } finally {
+      setSubmitting(false);
     }
   };
+
 
   const faqs = [
     {
@@ -292,13 +303,41 @@ export const CloudMigrationPage: React.FC = () => {
             <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 p-8 rounded-2xl text-center max-w-md mx-auto">
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold font-heading mb-2">Requirements Received</h3>
-              <p className="text-sm text-base-content/70">
+              <p className="text-sm text-base-content/70 mb-6">
                 Our Cloud Migration Lead will review your server inventory and follow up to schedule a technical discovery call.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormSubmitted(false);
+                  setErrorMsg(null);
+                  setFormData({
+                    fullName: '',
+                    workEmail: '',
+                    company: '',
+                    phone: '',
+                    currentEnv: 'On-Premises/Data Center',
+                    targetPlatform: 'Azure',
+                    vmCount: '25–100',
+                    criticalApps: '5',
+                    timeframe: '3–6 months',
+                    notes: '',
+                  });
+                }}
+                className="px-6 py-2.5 rounded-lg border border-base-300 hover:bg-base-200 text-xs font-semibold"
+              >
+                Submit another request
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="bg-base-200/50 p-8 rounded-2xl border border-base-300 grid grid-cols-1 md:grid-cols-2 gap-6 relative">
               <CornerMarkers />
+              {errorMsg && (
+                <div className="md:col-span-2 p-3.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-base-content/70 mb-2 font-heading">
                   Full Name
@@ -444,9 +483,17 @@ export const CloudMigrationPage: React.FC = () => {
 
               <button
                 type="submit"
-                className="btn btn-primary text-white md:col-span-2 font-heading font-bold shadow-lg py-3"
+                disabled={submitting}
+                className="btn btn-primary text-white md:col-span-2 font-heading font-bold shadow-lg py-3 flex items-center justify-center gap-2"
               >
-                Submit Migration Requirements
+                {submitting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Submitting Requirements...</span>
+                  </>
+                ) : (
+                  'Submit Migration Requirements'
+                )}
               </button>
             </form>
           )}

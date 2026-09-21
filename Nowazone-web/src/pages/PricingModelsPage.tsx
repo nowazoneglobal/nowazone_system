@@ -4,6 +4,7 @@ import { SEO } from '../components/common/SEO';
 import { CornerMarkers } from '../components/common/CornerMarkers';
 import { useModal } from '../context/ModalContext';
 import { submitContact } from '../api/forms';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 export const PricingModelsPage: React.FC = () => {
   const { openAssessment } = useModal();
@@ -20,6 +21,7 @@ export const PricingModelsPage: React.FC = () => {
   const [emailError, setEmailError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const validateBusinessEmail = (email: string) => {
     const freeDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com'];
@@ -42,23 +44,31 @@ export const PricingModelsPage: React.FC = () => {
       setEmailError(true);
       return;
     }
+    if (submitting) return;
     setSubmitting(true);
+    setErrorMsg(null);
     try {
-      await submitContact({
-        fullName: formData.fullName,
-        workEmail: formData.workEmail,
-        company: formData.company,
-        phone: formData.phone,
-        serviceInterest: `Pricing Inquiry: ${formData.engagementModel} (${formData.spendRange})`,
-        message: formData.message
+      const res = await submitContact({
+        name: formData.fullName.trim(),
+        email: formData.workEmail.trim(),
+        company: formData.company.trim(),
+        phone: formData.phone.trim() || undefined,
+        subject: `Pricing Inquiry: ${formData.engagementModel} (${formData.spendRange})`,
+        message: formData.message.trim() || undefined,
+        page: '/pricing-models',
       });
-      setSubmitted(true);
-    } catch {
-      setSubmitted(true);
+      if (res.status === 'success') {
+        setSubmitted(true);
+      } else {
+        setErrorMsg(res.message || 'Unable to submit inquiry. Please check your information and try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error. Please try again later.');
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const faqs = [
     {
@@ -533,10 +543,35 @@ export const PricingModelsPage: React.FC = () => {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"></path></svg>
                 </div>
                 <h3 className="font-bold text-lg text-base-content dark:text-white mb-1">Inquiry Sent</h3>
-                <p className="text-xs text-base-content/70 dark:text-white/70">A FinOps lead will respond within one business day.</p>
+                <p className="text-xs text-base-content/70 dark:text-white/70 mb-6">A FinOps lead will respond within one business day.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmitted(false);
+                    setErrorMsg(null);
+                    setFormData({
+                      fullName: '',
+                      workEmail: '',
+                      company: '',
+                      phone: '',
+                      engagementModel: 'Fixed Assessment',
+                      spendRange: '$50K–$250K',
+                      message: ''
+                    });
+                  }}
+                  className="px-6 py-2 rounded-lg border border-base-300 hover:bg-base-100 text-xs font-semibold"
+                >
+                  Send another inquiry
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="border border-base-300 dark:border-white/15 bg-base-200/50 dark:bg-navy-950 rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm">
+                {errorMsg && (
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Full Name *</label>
@@ -618,9 +653,17 @@ export const PricingModelsPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded hover:bg-primary-focus transition-all disabled:opacity-50"
+                  className="w-full relative py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded transition-all hover:bg-primary-focus disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {submitting ? 'Submitting...' : 'Send Inquiry'}
+                  <CornerMarkers />
+                  {submitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Sending Inquiry...</span>
+                    </>
+                  ) : (
+                    'Request Scoping Call & Pricing'
+                  )}
                 </button>
               </form>
             )}

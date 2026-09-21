@@ -11,6 +11,7 @@ const {
   updateConfigSchema,
   chatMessageSchema,
   listSessionQuerySchema,
+  updateSessionSchema,
 } = require('../schemas/chatbotSchemas');
 
 const rateLimit = require('express-rate-limit');
@@ -73,6 +74,12 @@ router.get(
   '/sessions/:id',
   authorize('chatbot.manage', '*'),
   ctrl.getSession
+);
+router.patch(
+  '/sessions/:id',
+  authorize('chatbot.manage', '*'),
+  validate(updateSessionSchema),
+  ctrl.updateSession
 );
 router.post(
   '/sessions/:id/respond',

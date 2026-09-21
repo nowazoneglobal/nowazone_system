@@ -22,6 +22,32 @@ exports.getSettings = async (req, res, next) => {
   }
 };
 
+exports.getPublicSettings = async (req, res, next) => {
+  try {
+    const doc = await ensureSettings();
+    const publicData = {
+      siteName: doc.siteName || 'NowAZone',
+      tagline: doc.tagline || '',
+      whatsapp: {
+        enabled: doc.whatsapp?.enabled ?? true,
+        phoneNumber: doc.whatsapp?.phoneNumber || '18005550199',
+        displayNumber: doc.whatsapp?.displayNumber || '+1 (800) 555-0199',
+        defaultMessage: doc.whatsapp?.defaultMessage || 'Hi Nowazone team! I would like to inquire about cloud FinOps and cost optimization.',
+        widgetPosition: doc.whatsapp?.widgetPosition || 'bottom-right',
+        agentName: doc.whatsapp?.agentName || 'Nowazone FinOps Desk',
+        greetingMessage: doc.whatsapp?.greetingMessage || 'Hi there! 👋 Need help with cloud costs, FinOps, or migration? Chat with our team directly on WhatsApp or right here.',
+        allowInBrowserChat: doc.whatsapp?.allowInBrowserChat ?? true,
+      },
+      system: {
+        maintenanceMode: doc.system?.maintenanceMode ?? false,
+      },
+    };
+    res.json({ status: 'success', data: publicData });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.updateSettings = async (req, res, next) => {
   try {
     const payload = req.body || {};
@@ -32,6 +58,7 @@ exports.updateSettings = async (req, res, next) => {
       ...(payload.notifications ? { notifications: payload.notifications } : {}),
       ...(payload.seo ? { seo: payload.seo } : {}),
       ...(payload.system ? { system: payload.system } : {}),
+      ...(payload.whatsapp ? { whatsapp: payload.whatsapp } : {}),
       updatedBy: req.user?._id || null,
     };
 

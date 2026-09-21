@@ -9,7 +9,7 @@ import {
   DollarSign, LifeBuoy, Bell, UserCircle, LogOut,
   BarChart2, CalendarDays, PanelLeftClose, PanelLeftOpen,
   UserCheck, ClipboardList, Search, ShieldCheck,
-  Sparkles, ChevronRight, Dot, Receipt, Repeat,
+  Sparkles, ChevronRight, Dot, Receipt, Repeat, MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
@@ -116,6 +116,7 @@ const adminMenuItems = (unreadCount: number, ticketsCount = 0): MenuItem[] => [
     badge: ticketsCount > 0 ? ticketsCount : undefined,
     children: [
       { label: 'Tickets', icon: null, href: '/dashboard/tickets', badge: ticketsCount > 0 ? ticketsCount : undefined },
+      { label: 'Live Chat & WhatsApp', icon: null, href: '/dashboard/chat-sessions' },
       { label: 'Chatbot', icon: null, href: '/dashboard/chatbot' },
     ],
   },
@@ -253,6 +254,7 @@ const salesMenuItems = (unreadCount: number): MenuItem[] => [
 const supportMenuItems = (unreadCount: number, ticketsCount = 0): MenuItem[] => [
   { label: 'Support Overview', icon: <LayoutGrid size={17} />, href: '/dashboard/support', match: 'exact', group: 'Main' },
   { label: 'Tickets', icon: <LifeBuoy size={17} />, href: '/dashboard/tickets', group: 'Support', badge: ticketsCount > 0 ? ticketsCount : undefined },
+  { label: 'Live Chat & WhatsApp', icon: <MessageSquare size={17} />, href: '/dashboard/chat-sessions', group: 'Support' },
   { label: 'Chatbot', icon: <Sparkles size={17} />, href: '/dashboard/chatbot', group: 'Support' },
   {
     label: 'Notifications', icon: <Bell size={17} />, href: '/dashboard/notifications',
@@ -330,6 +332,7 @@ const MODULE_SECTIONS: Record<string, { label: string; icon: React.ReactNode; ch
     children: [
       { label: 'Support Overview', icon: null, href: '/dashboard/support', match: 'exact' },
       { label: 'Tickets', icon: null, href: '/dashboard/tickets' },
+      { label: 'Live Chat & WhatsApp', icon: null, href: '/dashboard/chat-sessions' },
       { label: 'Chatbot', icon: null, href: '/dashboard/chatbot' },
     ],
   },

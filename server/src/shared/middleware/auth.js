@@ -96,7 +96,9 @@ const isPublicRoute = (path) => {
     clean.startsWith('/api/auth/linkedin') ||
     clean.startsWith('/api/auth/refresh') ||
     clean.startsWith('/api/auth/logout') ||
-    clean.startsWith('/api/crm/leads/public')
+    clean.startsWith('/api/crm/leads/public') ||
+    clean.startsWith('/api/settings/public') ||
+    clean.startsWith('/api/chatbot/public')
   );
 };
 

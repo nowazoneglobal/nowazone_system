@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SEO } from '../components/common/SEO';
 import { CornerMarkers } from '../components/common/CornerMarkers';
 import { useModal } from '../context/ModalContext';
-import { Server, HardDrive, Database, Layers, ArrowRight, ArrowLeft, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Server, HardDrive, Database, Layers, ArrowRight, ArrowLeft, CheckCircle2, ShieldAlert, AlertCircle, Loader2 } from 'lucide-react';
 import { submitAssessment } from '../api/forms';
 
 interface ProgressDot {
@@ -98,9 +98,10 @@ export const CostEstimatorPage: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [commitment, setCommitment] = useState<string>('ondemand');
 
-  const [emailEstStatus, setEmailEstStatus] = useState<'idle' | 'input' | 'submitting' | 'sent'>('idle');
+  const [emailEstStatus, setEmailEstStatus] = useState<'idle' | 'input' | 'submitting' | 'sent' | 'error'>('idle');
   const [emailEstEmail, setEmailEstEmail] = useState<string>('');
   const [emailEstName, setEmailEstName] = useState<string>('');
+  const [emailEstError, setEmailEstError] = useState<string | null>(null);
 
   const regionMult = REGION_MULT[region] || 1;
 
@@ -133,24 +134,32 @@ export const CostEstimatorPage: React.FC = () => {
 
   const handleSendEstimate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailEstEmail) return;
+    if (!emailEstEmail || emailEstStatus === 'submitting') return;
     setEmailEstStatus('submitting');
+    setEmailEstError(null);
     try {
-      await submitAssessment({
-        name: emailEstName || 'Estimator Visitor',
-        email: emailEstEmail,
+      const res = await submitAssessment({
+        name: emailEstName.trim() || 'Estimator Visitor',
+        email: emailEstEmail.trim(),
         platform: 'Azure',
         spend: `$${monthly}/mo`,
         model: 'Self-Service Cost Estimator',
         message: `Estimated configuration: ${resourceType} in ${region}, qty ${quantity}, commitment: ${commitment}. List estimate: ${fmt(monthly)}/mo.`,
+        listEstimate: monthly,
         page: '/cost-estimator',
       });
-      setEmailEstStatus('sent');
-    } catch (err) {
-      console.error(err);
-      setEmailEstStatus('sent'); // gracefully show confirmation
+      if (res.status === 'success') {
+        setEmailEstStatus('sent');
+      } else {
+        setEmailEstStatus('error');
+        setEmailEstError(res.message || 'Failed to dispatch estimate. Please check your email and try again.');
+      }
+    } catch (err: any) {
+      setEmailEstStatus('error');
+      setEmailEstError(err.message || 'Network error. Please try again later.');
     }
   };
+
 
   return (
     <>
@@ -573,7 +582,7 @@ export const CostEstimatorPage: React.FC = () => {
                   >
                     Get My Free Cost X-Ray
                   </button>
-                  {emailEstStatus === 'idle' && (
+                  {(emailEstStatus === 'idle' || emailEstStatus === 'error') && (
                     <button
                       type="button"
                       onClick={() => setEmailEstStatus('input')}
@@ -583,6 +592,22 @@ export const CostEstimatorPage: React.FC = () => {
                     </button>
                   )}
                 </div>
+
+                {emailEstStatus === 'error' && emailEstError && (
+                  <div className="max-w-md mx-auto mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="shrink-0" />
+                      <span>{emailEstError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailEstStatus('input')}
+                      className="underline font-semibold hover:text-red-700 shrink-0"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
 
                 {emailEstStatus === 'input' && (
                   <form onSubmit={handleSendEstimate} className="max-w-md mx-auto mt-6 flex flex-col gap-3">
@@ -608,15 +633,29 @@ export const CostEstimatorPage: React.FC = () => {
                 )}
 
                 {emailEstStatus === 'submitting' && (
-                  <div className="mt-4 text-xs font-semibold text-primary animate-pulse">
-                    Dispatching estimate summary...
+                  <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-primary">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Dispatching estimate summary...</span>
                   </div>
                 )}
 
                 {emailEstStatus === 'sent' && (
-                  <div className="mt-6 flex items-center justify-center gap-2 text-emerald-600 font-semibold text-sm">
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span>Estimate dispatched to {emailEstEmail}. Our FinOps architect will follow up!</span>
+                  <div className="mt-6 flex flex-col items-center justify-center gap-3">
+                    <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm">
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span>Estimate dispatched to {emailEstEmail}. Our FinOps architect will follow up!</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailEstStatus('idle');
+                        setEmailEstEmail('');
+                        setEmailEstName('');
+                      }}
+                      className="text-xs text-base-content/60 hover:underline"
+                    >
+                      Send to another email
+                    </button>
                   </div>
                 )}
               </div>

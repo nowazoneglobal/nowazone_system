@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SEO } from '../components/common/SEO';
 import { CornerMarkers } from '../components/common/CornerMarkers';
 import { submitContact } from '../api/forms';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 export const PartnerProgramPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -16,26 +17,37 @@ export const PartnerProgramPage: React.FC = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
+    setErrorMsg(null);
     try {
-      await submitContact({
-        fullName: formData.contactName,
-        workEmail: formData.workEmail,
-        company: formData.companyName,
-        phone: formData.phone,
-        serviceInterest: `Partner Application: ${formData.partnerType} [${formData.preferredTrack}] (${formData.cloudFocus})`,
-        message: formData.notes
+      const res = await submitContact({
+        name: formData.contactName.trim(),
+        email: formData.workEmail.trim(),
+        company: formData.companyName.trim(),
+        phone: formData.phone.trim() || undefined,
+        partnerType: formData.partnerType,
+        partnerFocus: `${formData.preferredTrack} - ${formData.cloudFocus}`,
+        subject: `Partner Application: ${formData.partnerType} [${formData.preferredTrack}] (${formData.cloudFocus})`,
+        message: formData.notes.trim() || undefined,
+        page: '/partner-program',
       });
-      setSubmitted(true);
-    } catch {
-      setSubmitted(true);
+      if (res.status === 'success') {
+        setSubmitted(true);
+      } else {
+        setErrorMsg(res.message || 'Unable to submit partner application. Please check your information and try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error. Please try again later.');
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="min-h-screen">
@@ -387,12 +399,38 @@ export const PartnerProgramPage: React.FC = () => {
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"></path></svg>
               </div>
               <h3 className="font-bold text-xl text-base-content dark:text-white mb-2">Partner Application Received</h3>
-              <p className="text-xs sm:text-sm text-base-content/70 dark:text-white/70">
+              <p className="text-xs sm:text-sm text-base-content/70 dark:text-white/70 mb-6">
                 Our channel lead will review your application and schedule a partnership onboarding call.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubmitted(false);
+                  setErrorMsg(null);
+                  setFormData({
+                    companyName: '',
+                    contactName: '',
+                    workEmail: '',
+                    phone: '',
+                    partnerType: 'Cloud Solution Provider (CSP)',
+                    preferredTrack: 'Subcontract / Delivery Partner',
+                    cloudFocus: 'Multi-Cloud',
+                    notes: ''
+                  });
+                }}
+                className="px-6 py-2 rounded-lg border border-base-300 dark:border-white/20 hover:bg-base-200 text-xs font-semibold"
+              >
+                Submit another application
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="border border-base-300 dark:border-white/10 bg-base-200/50 dark:bg-navy-light rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm">
+              {errorMsg && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Company Name *</label>
@@ -497,9 +535,16 @@ export const PartnerProgramPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded hover:bg-primary-focus transition-all disabled:opacity-50"
+                className="w-full py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded hover:bg-primary-focus transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {submitting ? 'Submitting Application...' : 'Submit Partner Application'}
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Submitting Application...</span>
+                  </>
+                ) : (
+                  'Submit Partner Application'
+                )}
               </button>
             </form>
           )}

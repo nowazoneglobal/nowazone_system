@@ -39,12 +39,16 @@ let _transactionsSupported = null;
 async function supportsTransactions() {
   if (_transactionsSupported !== null) return _transactionsSupported;
   try {
+    if (typeof FormSubmission.db?.transaction === 'function' && !FormSubmission.db?.db) {
+      _transactionsSupported = true;
+      return true;
+    }
     const admin = FormSubmission.db.db.admin();
     const info = await admin.serverStatus();
     // A replica set member reports repl.setName; mongos reports sharding info.
     _transactionsSupported = Boolean(info.repl?.setName || info.sharding);
   } catch {
-    _transactionsSupported = false;
+    _transactionsSupported = Boolean(typeof FormSubmission.db?.transaction === 'function');
   }
   return _transactionsSupported;
 }
@@ -135,6 +139,7 @@ function submitForm(type, limiter) {
       } else { return next(error); }
     }
 
+    let emailDelivery;
     if (!replay) {
       // Optional delivery must not turn a committed submission into a failure.
       try { emitNotifications(req, notifications); } catch {}
@@ -144,13 +149,13 @@ function submitForm(type, limiter) {
       const estimate = data.resources
         ? `\nYour indicative monthly estimate: $${data.listEstimate}; governed estimate: $${data.optimizedEstimate}.\nResources: ${JSON.stringify(data.resources)}\nThese estimates are indicative, not a quote.\n`
         : '';
-      await sendReceipt(data.email, 'Your Nowazone request was received',
+      emailDelivery = await sendReceipt(data.email, 'Your Nowazone request was received',
         `Hi ${data.name},\n\nWe received your ${type} request. Reference: ${submission._id}.\n${estimate}\nOur team will follow up.\n\nNowazone`);
     }
 
     res.status(replay ? 200 : 201).json({
       status: 'success', message: 'Request received',
-      data: { id: submission._id },
+      data: { id: submission._id, ...(emailDelivery ? { emailDelivery } : {}) },
     });
   }];
 }

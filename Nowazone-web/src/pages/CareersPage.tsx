@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronDown, MapPin, Briefcase } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, ChevronDown, MapPin, Briefcase, LogIn, UserPlus, ShieldCheck, UserCheck } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 import { CornerMarkers } from '../components/common/CornerMarkers';
 import { submitJobApplication, submitGeneralProfile, uploadResume } from '../api/forms';
 import { apiUrl } from '../api/base';
+import { useAuth } from '../context/AuthContext';
+import { useModals } from '../context/ModalContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,10 @@ function formatType(type: string): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const CareersPage: React.FC = () => {
+  const { user } = useAuth();
+  const { openAuthModal } = useModals();
+  const navigate = useNavigate();
+
   // ── Jobs state ──────────────────────────────────────────────────────────────
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +79,7 @@ export const CareersPage: React.FC = () => {
   // ── UI state ────────────────────────────────────────────────────────────────
   const [expandedRole, setExpandedRole] = useState<string | null>(null);
   const [applyModalRole, setApplyModalRole] = useState<string | null>(null);
+  const [pendingApplyRole, setPendingApplyRole] = useState<string | null>(null);
   const [applicantData, setApplicantData] = useState({
     fullName: '', email: '', phone: '', linkedinUrl: '', coverNote: '', resumeFile: null as File | null
   });
@@ -80,6 +87,36 @@ export const CareersPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'good' | 'honest' | 'looking'>('good');
+
+  // Sync logged-in user profile into form
+  useEffect(() => {
+    if (user) {
+      setApplicantData(prev => ({
+        ...prev,
+        fullName: user.name || prev.fullName,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+      if (pendingApplyRole) {
+        setApplyModalRole(pendingApplyRole);
+        setPendingApplyRole(null);
+        setSubmitted(false);
+        setSubmitError(null);
+      }
+    }
+  }, [user, pendingApplyRole]);
+
+  // Handle open apply: if not logged in, prompt sign in first
+  const handleOpenApply = (roleId: string) => {
+    setSubmitted(false);
+    setSubmitError(null);
+    if (!user) {
+      setPendingApplyRole(roleId);
+      openAuthModal('login');
+      return;
+    }
+    setApplyModalRole(roleId);
+  };
 
   // Close on Escape and lock page scroll while the apply modal is open
   useEffect(() => {
@@ -116,6 +153,11 @@ export const CareersPage: React.FC = () => {
 
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      setPendingApplyRole(applyModalRole);
+      openAuthModal('login');
+      return;
+    }
     setSubmitError(null);
     setSubmitting(true);
     try {
@@ -137,8 +179,8 @@ export const CareersPage: React.FC = () => {
 
       if (job) {
         const res = await submitJobApplication(job._id, {
-          applicantName: applicantData.fullName,
-          applicantEmail: applicantData.email,
+          applicantName: applicantData.fullName || user.name,
+          applicantEmail: applicantData.email || user.email,
           applicantPhone: applicantData.phone || undefined,
           resumeUrl,
           coverLetter: linkedinNote + applicantData.coverNote || undefined,
@@ -147,8 +189,8 @@ export const CareersPage: React.FC = () => {
         if (res.status !== 'success') throw new Error(res.message || 'Failed to submit application.');
       } else {
         const res = await submitGeneralProfile({
-          applicantName: applicantData.fullName,
-          email: applicantData.email,
+          applicantName: applicantData.fullName || user.name,
+          email: applicantData.email || user.email,
           phone: applicantData.phone || undefined,
           resumeUrl,
           notes: (linkedinNote + applicantData.coverNote) || undefined,
@@ -369,7 +411,7 @@ export const CareersPage: React.FC = () => {
               </p>
               <button
                 type="button"
-                onClick={() => { setApplyModalRole('general'); setSubmitted(false); setSubmitError(null); }}
+                onClick={() => handleOpenApply('general')}
                 className="px-6 py-2.5 bg-primary text-white text-xs font-bold rounded hover:bg-primary-focus transition-all"
               >
                 Send a General Application →
@@ -405,7 +447,7 @@ export const CareersPage: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setApplyModalRole(r._id); setSubmitted(false); setSubmitError(null); }}
+                        onClick={() => handleOpenApply(r._id)}
                         className="flex-1 sm:flex-none px-5 py-2 bg-primary text-white rounded text-xs font-bold hover:bg-primary-focus transition-all shadow-sm"
                       >
                         Apply
@@ -455,7 +497,7 @@ export const CareersPage: React.FC = () => {
               Don't see a role that fits?{' '}
               <button
                 type="button"
-                onClick={() => { setApplyModalRole('general'); setSubmitted(false); setSubmitError(null); }}
+                onClick={() => handleOpenApply('general')}
                 className="text-primary font-bold hover:underline"
               >
                 Send a general application anyway →
@@ -518,22 +560,74 @@ export const CareersPage: React.FC = () => {
 
             {submitted ? (
               <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"></path></svg>
+                <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"></path></svg>
                 </div>
-                <h3 className="font-bold text-xl text-base-content dark:text-white mb-1">Application Received!</h3>
-                <p className="text-xs text-base-content/70 dark:text-white/70 mb-6">
-                  Thank you for applying. We will review your background and reach out within a week.
+                <h3 className="font-bold text-xl text-base-content dark:text-white mb-1.5">Application Received!</h3>
+                <p className="text-xs text-base-content/70 dark:text-white/70 mb-6 max-w-sm mx-auto leading-relaxed">
+                  Thank you for applying for <strong>{jobs.find(j => j._id === applyModalRole)?.title || 'this position'}</strong>. We have dispatched a confirmation email to <strong>{applicantData.email || user?.email}</strong> and our team will review your application shortly.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setApplyModalRole(null)}
-                  className="px-6 py-2 bg-primary text-white rounded text-xs font-bold"
-                >
-                  Close
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    to="/portal/submissions"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-primary text-white rounded text-xs font-bold hover:bg-primary-focus shadow-md transition-all text-center"
+                  >
+                    View in Candidate Portal →
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setApplyModalRole(null)}
+                    className="w-full sm:w-auto px-5 py-2.5 border border-base-300 dark:border-white/20 text-base-content dark:text-white hover:bg-base-200 dark:hover:bg-white/10 rounded text-xs font-semibold transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : !user ? (
+              /* Sign-In Required Gate */
+              <div className="py-6 text-center space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-sm">
+                  <LogIn size={28} />
+                </div>
+                <div>
+                  <span className="text-xs uppercase tracking-wider text-primary font-bold block mb-1">
+                    Applying for {jobs.find(j => j._id === applyModalRole)?.title || 'General Application'}
+                  </span>
+                  <h3 className="font-bold text-xl text-base-content dark:text-white">
+                    Sign in to Submit Your Application
+                  </h3>
+                  <p className="text-xs text-base-content/70 dark:text-white/70 max-w-md mx-auto mt-2 leading-relaxed">
+                    To submit your resume, receive updates, and track your application review progress, please sign in to your Nowazone candidate account.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2.5 max-w-xs mx-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingApplyRole(applyModalRole);
+                      openAuthModal('login');
+                    }}
+                    className="w-full py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded-xl hover:bg-primary-focus transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    <LogIn size={16} />
+                    <span>Sign In to Continue</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingApplyRole(applyModalRole);
+                      openAuthModal('signup');
+                    }}
+                    className="w-full py-2.5 border border-base-300 dark:border-white/20 bg-base-100 dark:bg-navy text-base-content dark:text-white font-semibold text-xs rounded-xl hover:bg-base-200 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                  >
+                    <UserPlus size={16} />
+                    <span>Create a Free Account</span>
+                  </button>
+                </div>
               </div>
             ) : (
+              /* Logged-in Application Form */
               <form onSubmit={handleApplySubmit} className="space-y-4">
                 <div>
                   <span className="text-xs uppercase tracking-wider text-primary font-bold block mb-1">Applying for</span>
@@ -542,8 +636,29 @@ export const CareersPage: React.FC = () => {
                   </h3>
                 </div>
 
+                {/* Logged in User Indicator */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-semibold text-base-content dark:text-white block leading-tight truncate">
+                        {user.name}
+                      </span>
+                      <span className="text-[11px] text-base-content/60 dark:text-white/60 truncate block">
+                        {user.email}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <ShieldCheck size={12} />
+                    Verified
+                  </span>
+                </div>
+
                 {submitError && (
-                  <div className="border border-error/30 bg-error/10 rounded px-3 py-2 text-xs text-error font-medium">
+                  <div className="border border-error/30 bg-error/10 rounded-xl px-3.5 py-2 text-xs text-error font-medium">
                     {submitError}
                   </div>
                 )}
@@ -555,29 +670,30 @@ export const CareersPage: React.FC = () => {
                     required
                     value={applicantData.fullName}
                     onChange={e => setApplicantData({ ...applicantData, fullName: e.target.value })}
-                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
+                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded-xl px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Email *</label>
+                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
                     placeholder="you@example.com"
                     value={applicantData.email}
                     onChange={e => setApplicantData({ ...applicantData, email: e.target.value })}
-                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
+                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded-xl px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Phone (optional)</label>
+                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Phone Number (optional)</label>
                   <input
                     type="tel"
+                    placeholder="+1 (555) 000-0000"
                     value={applicantData.phone}
                     onChange={e => setApplicantData({ ...applicantData, phone: e.target.value })}
-                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
+                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded-xl px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
                   />
                 </div>
 
@@ -588,18 +704,18 @@ export const CareersPage: React.FC = () => {
                     placeholder="https://linkedin.com/in/..."
                     value={applicantData.linkedinUrl}
                     onChange={e => setApplicantData({ ...applicantData, linkedinUrl: e.target.value })}
-                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
+                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded-xl px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Resume (PDF) *</label>
+                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Resume (PDF, max 10MB) *</label>
                   <input
                     type="file"
                     accept=".pdf,application/pdf"
                     required
                     onChange={e => setApplicantData({ ...applicantData, resumeFile: e.target.files?.[0] ?? null })}
-                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-primary/10 file:text-primary file:text-xs file:font-semibold file:cursor-pointer"
+                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded-xl px-3 py-2 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:text-xs file:font-semibold file:cursor-pointer"
                   />
                   {applicantData.resumeFile && (
                     <p className="text-[11px] text-base-content/60 dark:text-white/50 mt-1">
@@ -609,20 +725,20 @@ export const CareersPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Anything you'd like us to know? (optional)</label>
+                  <label className="text-xs font-semibold text-base-content dark:text-white block mb-1">Cover Note / Why Nowazone? (optional)</label>
                   <textarea
                     rows={3}
                     value={applicantData.coverNote}
                     onChange={e => setApplicantData({ ...applicantData, coverNote: e.target.value })}
-                    placeholder="Tell us what excites you about FinOps or cloud optimization..."
-                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded p-3 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary resize-none"
+                    placeholder="Tell us what excites you about FinOps or cloud cost optimization..."
+                    className="w-full border border-base-300 dark:border-white/15 bg-base-100 dark:bg-navy rounded-xl p-3 text-xs sm:text-sm text-base-content dark:text-white outline-none focus:border-primary resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded hover:bg-primary-focus transition-all disabled:opacity-50"
+                  className="w-full py-3 bg-primary text-white font-bold text-xs sm:text-sm rounded-xl hover:bg-primary-focus transition-all disabled:opacity-50 shadow-md"
                 >
                   {submitting ? 'Submitting Application...' : 'Submit Application'}
                 </button>

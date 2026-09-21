@@ -156,22 +156,35 @@ exports.reorderFaqs = async (req, res, next) => {
 
 exports.listSessions = async (req, res, next) => {
   try {
-    const page = Math.max(req.validatedQuery.page || 1, 1);
-    const limit = Math.min(req.validatedQuery.limit || 20, 100);
+    const page = Math.max(parseInt(req.query.page || req.validatedQuery?.page, 10) || 1, 1);
+    const limit = Math.min(parseInt(req.query.limit || req.validatedQuery?.limit, 10) || 30, 100);
     const filter = {};
 
-    if (req.validatedQuery.status) {
-      filter.status = req.validatedQuery.status;
+    const status = req.query.status || req.validatedQuery?.status;
+    if (status && status !== 'all') {
+      filter.status = status;
     }
-    if (Number.isFinite(req.validatedQuery.updatedAfter)) {
-      filter.updatedAt = { $gt: new Date(req.validatedQuery.updatedAfter) };
+
+    const channel = req.query.channel || req.validatedQuery?.channel;
+    if (channel && channel !== 'all') {
+      filter.channel = channel;
+    }
+
+    const search = req.query.search || req.validatedQuery?.search;
+    if (search && typeof search === 'string' && search.trim()) {
+      filter.$or = [
+        { visitorName: { $regex: search.trim(), $options: 'i' } },
+        { visitorEmail: { $regex: search.trim(), $options: 'i' } },
+        { visitorPhone: { $regex: search.trim(), $options: 'i' } },
+        { lastMessage: { $regex: search.trim(), $options: 'i' } },
+      ];
     }
 
     const [sessions, total] = await Promise.all([
       ChatSession.find(filter)
         .populate('user', 'name email')
         .populate('escalatedTicketId', 'ticketNumber status')
-        .sort({ createdAt: -1 })
+        .sort({ lastMessageAt: -1, updatedAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),
       ChatSession.countDocuments(filter),
@@ -204,6 +217,12 @@ exports.getSession = async (req, res, next) => {
       return next(new AppError('Session not found', 404));
     }
 
+    // Mark as read by admin when retrieved
+    if (session.unreadByAdmin > 0) {
+      session.unreadByAdmin = 0;
+      await session.save().catch(() => {});
+    }
+
     res.json({ status: 'success', data: { session } });
   } catch (error) {
     next(error);
@@ -217,7 +236,7 @@ exports.publicChat = async (req, res, next) => {
       return next(new AppError('Chatbot is currently disabled', 503));
     }
 
-    const { message, sessionId, visitorName, visitorEmail } = req.body;
+    const { message, sessionId, visitorName, visitorEmail, visitorPhone, pageUrl } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {
       return next(new AppError('Message is required', 400));
     }
@@ -232,13 +251,28 @@ exports.publicChat = async (req, res, next) => {
         user: null,
         channel: 'widget',
         status: 'open',
+        visitorName: visitorName?.trim() || 'Website Visitor',
+        visitorEmail: visitorEmail?.trim() || null,
+        visitorPhone: visitorPhone?.trim() || null,
+        pageUrl: pageUrl?.trim() || '/',
+        lastMessage: message.trim(),
+        lastMessageAt: new Date(),
+        unreadByAdmin: 1,
         messages: [],
       });
+    } else {
+      if (visitorName?.trim()) session.visitorName = visitorName.trim();
+      if (visitorEmail?.trim()) session.visitorEmail = visitorEmail.trim();
+      if (visitorPhone?.trim()) session.visitorPhone = visitorPhone.trim();
+      if (pageUrl?.trim()) session.pageUrl = pageUrl.trim();
+      session.lastMessage = message.trim();
+      session.lastMessageAt = new Date();
+      session.unreadByAdmin = (session.unreadByAdmin || 0) + 1;
     }
 
     // Capture history before appending the new user message
     const historyBeforeThisMessage = [...session.messages];
-    session.messages.push({ role: 'user', content: message, source: 'system' });
+    session.messages.push({ role: 'user', content: message.trim(), source: 'system' });
 
     const faqs = await ChatbotFaq.find({ isActive: true }).lean();
 
@@ -390,9 +424,14 @@ exports.respondToSession = async (req, res, next) => {
 
     session.messages.push({
       role: 'agent',
-      content: message,
+      content: message.trim(),
       source: 'system',
     });
+
+    session.lastMessage = message.trim();
+    session.lastMessageAt = new Date();
+    session.unreadByAdmin = 0;
+    session.unreadByClient = (session.unreadByClient || 0) + 1;
 
     if (session.status === 'escalated') {
       session.status = 'resolved';
@@ -415,6 +454,32 @@ exports.respondToSession = async (req, res, next) => {
           : null,
       });
     }
+
+    res.json({ status: 'success', data: { session: responseSession } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateSession = async (req, res, next) => {
+  try {
+    const { status, visitorName, visitorEmail, visitorPhone } = req.body;
+    const session = await ChatSession.findById(req.params.id);
+    if (!session) {
+      return next(new AppError('Session not found', 404));
+    }
+
+    if (status) session.status = status;
+    if (visitorName !== undefined) session.visitorName = visitorName;
+    if (visitorEmail !== undefined) session.visitorEmail = visitorEmail;
+    if (visitorPhone !== undefined) session.visitorPhone = visitorPhone;
+
+    await session.save();
+
+    const responseSession = await ChatSession.findById(session._id)
+      .populate('user', 'name email')
+      .populate('escalatedTicketId', 'ticketNumber status')
+      .lean();
 
     res.json({ status: 'success', data: { session: responseSession } });
   } catch (error) {

@@ -4,6 +4,7 @@ import { SEO } from '../../components/common/SEO';
 import { CornerMarkers } from '../../components/common/CornerMarkers';
 import { useModal } from '../../context/ModalContext';
 import { submitAppointment } from '../../api/forms';
+import { AlertCircle } from 'lucide-react';
 
 export const ManagedServicePage: React.FC = () => {
   const { openAssessment } = useModal();
@@ -17,28 +18,37 @@ export const ManagedServicePage: React.FC = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
+    setErrorMsg(null);
     try {
-      await submitAppointment({
-        fullName: formData.name,
-        workEmail: formData.email,
-        company: formData.company,
-        phone: formData.phone,
+      const res = await submitAppointment({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        company: formData.company.trim(),
+        phone: formData.phone.trim() || undefined,
         preferredDate: new Date().toISOString().split('T')[0],
-        preferredTime: '10:00 AM',
+        preferredTime: '10:00',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        topic: `Managed Service: ${formData.supportNeed} (${formData.environmentSize})`
+        topic: `Managed Service: ${formData.supportNeed} (${formData.environmentSize})`,
+        page: '/solutions/managed-service',
       });
-      setSubmitted(true);
-    } catch {
-      setSubmitted(true);
+      if (res.status === 'success') {
+        setSubmitted(true);
+      } else {
+        setErrorMsg(res.message || 'Unable to submit appointment request. Please check your details and try again.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error. Please try again later.');
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const faqs = [
     {
@@ -264,10 +274,34 @@ export const ManagedServicePage: React.FC = () => {
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"></path></svg>
               </div>
               <h3 className="font-semibold text-xl text-base-content dark:text-white mb-2">Request Received.</h3>
-              <p className="text-sm text-base-content/70 dark:text-white/70">A support specialist will follow up shortly to recommend the right tier.</p>
+              <p className="text-sm text-base-content/70 dark:text-white/70 mb-6">A support specialist will follow up shortly to recommend the right tier.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubmitted(false);
+                  setErrorMsg(null);
+                  setFormData({
+                    name: '',
+                    email: '',
+                    company: '',
+                    phone: '',
+                    supportNeed: 'Post-migration handoff',
+                    environmentSize: 'Under 25 servers/VMs'
+                  });
+                }}
+                className="px-6 py-2 rounded border border-base-300 dark:border-white/20 hover:bg-base-200 dark:hover:bg-white/5 text-xs font-semibold"
+              >
+                Submit another request
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="bg-base-100 dark:bg-navy border border-base-300 dark:border-white/10 rounded-2xl p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-xl">
+              {errorMsg && (
+                <div className="sm:col-span-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div>
                 <label className="text-xs tracking-wider uppercase text-base-content/70 dark:text-white/60 block mb-1">Full Name *</label>
                 <input

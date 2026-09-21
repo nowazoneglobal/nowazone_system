@@ -82,8 +82,16 @@ const listSessionQuerySchema = z.object({
     .optional()
     .transform((value) => (value ? parseInt(value, 10) : undefined)),
   status: z.enum(['open', 'escalated', 'resolved', 'closed']).optional(),
+  search: z.string().optional(),
   // Badge: count sessions updated after this timestamp (so badge clears when admin visits page)
   updatedAfter: z.string().optional().transform((v) => (v ? parseInt(v, 10) : undefined)),
+});
+
+const updateSessionSchema = z.object({
+  status: z.enum(['open', 'escalated', 'resolved', 'closed']).optional(),
+  visitorName: z.string().max(100).optional(),
+  visitorEmail: z.string().email().optional().or(z.literal('')),
+  visitorPhone: z.string().max(50).optional().or(z.literal('')),
 });
 
 module.exports = {
@@ -94,5 +102,7 @@ module.exports = {
   updateConfigSchema,
   chatMessageSchema,
   listSessionQuerySchema,
+  updateSessionSchema,
 };
+
 

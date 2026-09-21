@@ -43,6 +43,23 @@ const settingsSchema = new mongoose.Schema(
       sessionTimeout: { type: Number, default: 1440 }, // in minutes
     },
 
+    whatsapp: {
+      enabled: { type: Boolean, default: true },
+      phoneNumber: { type: String, default: '18005550199' },
+      displayNumber: { type: String, default: '+1 (800) 555-0199' },
+      defaultMessage: { type: String, default: 'Hi Nowazone team! I would like to inquire about cloud FinOps and cost optimization.' },
+      widgetPosition: { type: String, enum: ['bottom-right', 'bottom-left'], default: 'bottom-right' },
+      agentName: { type: String, default: 'Nowazone FinOps Desk' },
+      greetingMessage: { type: String, default: 'Hi there! 👋 Need help with cloud costs, FinOps, or migration? Chat with our team directly on WhatsApp or right here.' },
+      allowInBrowserChat: { type: Boolean, default: true },
+      cloudApi: {
+        enabled: { type: Boolean, default: false },
+        phoneNumberId: { type: String, default: '' },
+        accessToken: { type: String, default: '' },
+        webhookVerifyToken: { type: String, default: '' },
+      },
+    },
+
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true }

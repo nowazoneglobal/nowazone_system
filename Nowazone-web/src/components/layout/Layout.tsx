@@ -5,6 +5,7 @@ import { Footer } from './Footer';
 import { AssessmentModal } from '../modals/AssessmentModal';
 import { AuthModal } from '../modals/AuthModal';
 import { OAuthCallback } from '../auth/OAuthCallback';
+import { WhatsAppWidget } from '../common/WhatsAppWidget';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
@@ -42,6 +43,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <OAuthCallback />
       <AssessmentModal />
       <AuthModal />
+      <WhatsAppWidget />
     </div>
   );
 };
