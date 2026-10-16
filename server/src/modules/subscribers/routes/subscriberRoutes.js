@@ -7,7 +7,10 @@ const { validate } = require('../../../shared/middleware/validation');
 const { subscriber } = require('../../../shared/schemas/publicSubmissionSchemas');
 
 const router = express.Router();
-const subLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5 });
+const subLimiter = createRateLimiter({ 
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: parseInt(process.env.SUBSCRIBE_RATE_LIMIT_MAX, 10) || 10, // Increased from 5 to 10
+});
 
 // Public
 router.post('/subscribe', subLimiter, validate(subscriber), ctrl.subscribe);

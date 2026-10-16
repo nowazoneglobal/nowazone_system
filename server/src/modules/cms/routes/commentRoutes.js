@@ -8,7 +8,10 @@ const { createRateLimiter } = require('../../../shared/middleware/rateLimiter');
 const router = express.Router();
 
 // Moderate rate-limit for the public comment thread endpoint
-const commentReadLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 60 });
+const commentReadLimiter = createRateLimiter({ 
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.COMMENT_READ_RATE_LIMIT_MAX, 10) || 120, // Increased from 60 to 120
+});
 
 // ─── Public read-only route ────────────────────────────────────────────────────
 router.get('/post/:postId/thread', commentReadLimiter, commentController.getCommentThread);

@@ -288,3 +288,55 @@ html:not(.dark) div[class*="bg-[#0a63ce]"]:not([class*="/"]):not([class*="hover:
 
 
 
+
+/* ══════════════════════════════════════════════════════════════════
+   Job Description Formatting
+   ══════════════════════════════════════════════════════════════════ */
+.job-description-content {
+  line-height: 1.6;
+}
+
+.job-description-content h3 {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.job-description-content ul,
+.job-description-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.job-description-content ul {
+  list-style-type: disc;
+}
+
+.job-description-content ol {
+  list-style-type: decimal;
+}
+
+.job-description-content li {
+  margin: 0.25rem 0;
+}
+
+.job-description-content blockquote {
+  border-left: 4px solid;
+  padding-left: 1rem;
+  font-style: italic;
+  margin: 0.5rem 0;
+  opacity: 0.9;
+}
+
+.job-description-content strong {
+  font-weight: 600;
+}
+
+.job-description-content em {
+  font-style: italic;
+}
+
+.job-description-content p {
+  margin: 0.75rem 0;
+}

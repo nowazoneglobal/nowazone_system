@@ -7,6 +7,7 @@ import { submitJobApplication, submitGeneralProfile, uploadResume } from '../api
 import { apiUrl } from '../api/base';
 import { useAuth } from '../context/AuthContext';
 import { useModals } from '../context/ModalContext';
+import { formatJobDescription } from '../utils/formatJobDescription';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -457,7 +458,12 @@ export const CareersPage: React.FC = () => {
 
                   {expandedRole === r._id && (
                     <div className="p-6 pt-0 border-t border-base-200 dark:border-white/10 mt-2 space-y-4 text-xs sm:text-sm text-base-content/80 dark:text-white/100">
-                      <p className="leading-relaxed text-base-content dark:text-white font-medium">{r.description}</p>
+                      <div 
+                        className="job-description-content leading-relaxed text-base-content dark:text-white font-medium"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatJobDescription(r.description)
+                        }}
+                      />
                       {r.responsibilities?.length > 0 && (
                         <div>
                           <h4 className="font-bold text-base-content dark:text-white mb-2">What you'll do:</h4>

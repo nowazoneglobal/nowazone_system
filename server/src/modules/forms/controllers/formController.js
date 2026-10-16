@@ -13,16 +13,16 @@ const { invalidateDashboardCache } = require('../../../shared/services/dashboard
 // ─── In-memory rate limiters for public form endpoints ──────────────────────
 
 const formLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.FORM_RATE_LIMIT_MAX, 10) || 20, // Increased from 10 to 20
   message: { status: 'fail', message: 'Too many submissions. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 const contactLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.CONTACT_RATE_LIMIT_MAX, 10) || 10, // Increased from 5 to 10
   message: { status: 'fail', message: 'Too many contact submissions. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,

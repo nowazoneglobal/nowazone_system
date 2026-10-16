@@ -19,7 +19,13 @@ const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
 // Public chat endpoint for website widget (no auth required)
-const publicChatLimiter = rateLimit({ windowMs: 60000, max: 30 });
+const publicChatLimiter = rateLimit({ 
+  windowMs: 60000, // 1 minute
+  max: parseInt(process.env.CHATBOT_RATE_LIMIT_MAX, 10) || 60, // Increased from 30 to 60
+  message: { status: 'fail', message: 'Too many chat messages. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 router.post('/public/chat', publicChatLimiter, ctrl.publicChat);
 router.get('/public/session/:sessionId', ctrl.getPublicSession);
 

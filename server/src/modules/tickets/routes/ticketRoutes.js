@@ -5,7 +5,10 @@ const { createRateLimiter } = require('../../../shared/middleware/rateLimiter');
 
 const router = express.Router();
 const SUPPORT_ROLES = ['admin', 'super_admin', 'support_executive'];
-const publicLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
+const publicLimiter = createRateLimiter({ 
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.TICKET_RATE_LIMIT_MAX, 10) || 20, // Increased from 10 to 20
+});
 
 // Public: create ticket
 router.post('/public', publicLimiter, ctrl.createTicket);

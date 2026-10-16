@@ -6,8 +6,12 @@ const rateLimit = require('express-rate-limit');
 // ─── In-memory rate limiter for public tracking endpoints ───────────────────
 
 const trackingLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 60,
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: parseInt(process.env.TRACKING_RATE_LIMIT_MAX, 10) || 120, // Increased from 60 to 120
+  message: { status: 'fail', message: 'Too many tracking requests.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
   message: { status: 'fail', message: 'Too many requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,

@@ -42,10 +42,10 @@ const createRateLimiter = (options = {}) => {
   });
 };
 
-/** Strict limiter for login and register — only 5 attempts per 15 min. */
+/** Strict limiter for login and register — only 10 attempts per 15 min. */
 const authLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) || 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) || 10, // Increased from 5 to 10
   message: {
     status:  'fail',
     message: 'Too many authentication attempts. Please try again in 15 minutes.',
@@ -54,8 +54,8 @@ const authLimiter = createRateLimiter({
 
 /** Dedicated limiter for the refresh endpoint — prevents token brute-force. */
 const refreshLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: parseInt(process.env.REFRESH_RATE_LIMIT_MAX, 10) || 20,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.REFRESH_RATE_LIMIT_MAX, 10) || 50, // Increased from 20 to 50
   message: {
     status:  'fail',
     message: 'Too many token refresh requests. Please try again later.',
@@ -65,7 +65,7 @@ const refreshLimiter = createRateLimiter({
 /** Strict limiter for password-reset request — prevents email enumeration abuse. */
 const forgotPasswordLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000, // 1-hour window
-  max: parseInt(process.env.FORGOT_RATE_LIMIT_MAX, 10) || 5,
+  max: parseInt(process.env.FORGOT_RATE_LIMIT_MAX, 10) || 10, // Increased from 5 to 10
   message: {
     status:  'fail',
     message: 'Too many password reset requests. Please try again in an hour.',
@@ -74,8 +74,9 @@ const forgotPasswordLimiter = createRateLimiter({
 
 /** General API limiter — applied to all /api routes. */
 const apiLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: parseInt(process.env.API_RATE_LIMIT_MAX, 10) || 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.API_RATE_LIMIT_MAX, 10) || 500, // Increased from 100 to 500
+  skipSuccessfulRequests: false, // Count all requests
 });
 
 module.exports = { createRateLimiter, authLimiter, refreshLimiter, forgotPasswordLimiter, apiLimiter };

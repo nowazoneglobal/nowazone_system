@@ -1,235 +1,175 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+/**
+ * HeroTopologyCanvas v2 — denser scroll-driven + mouse-parallax particle field.
+ * Performance: IntersectionObserver pauses render, capped pixel ratio, mobile-reduced counts.
+ */
 export const HeroTopologyCanvas: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    // Check prefers-reduced-motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+    const isMobile = window.innerWidth < 768;
+    const NODE_COUNT = isMobile ? 55 : 110;
+    const CONN_DIST  = isMobile ? 20 : 26;
 
-    // Dimensions
-    const width = container.clientWidth || window.innerWidth;
-    const height = container.clientHeight || 700;
+    const width  = container.clientWidth  || window.innerWidth;
+    const height = container.clientHeight || 720;
 
-    // Scene & Camera
-    const scene = new THREE.Scene();
+    const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-    camera.position.z = 85;
+    camera.position.z = 90;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
 
-    // Build Topology Lattice Nodes
-    const nodeCount = 42;
-    const positions = new Float32Array(nodeCount * 3);
-    const colors = new Float32Array(nodeCount * 3);
+    const C_PRIMARY = new THREE.Color('#0F62FE');
+    const C_EMERALD = new THREE.Color('#10B981');
+    const C_SLATE   = new THREE.Color('#5980A6');
+    const C_CYAN    = new THREE.Color('#22D3EE');
+    const palette   = [C_PRIMARY, C_EMERALD, C_SLATE, C_CYAN];
 
-    const primaryColor = new THREE.Color('#0F62FE');
-    const emeraldColor = new THREE.Color('#10B981');
-    const slateColor = new THREE.Color('#5980A6');
+    const positions = new Float32Array(NODE_COUNT * 3);
+    const colors    = new Float32Array(NODE_COUNT * 3);
 
-    const nodesData: Array<{ x: number; y: number; z: number; vx: number; vy: number }> = [];
+    type NodeData = { x: number; y: number; z: number; vx: number; vy: number };
+    const nodes: NodeData[] = [];
 
-    for (let i = 0; i < nodeCount; i++) {
-      const x = (Math.random() - 0.5) * 110;
-      const y = (Math.random() - 0.5) * 60;
-      const z = (Math.random() - 0.5) * 40;
-
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-
-      nodesData.push({
-        x, y, z,
-        vx: (Math.random() - 0.5) * 0.02,
-        vy: (Math.random() - 0.5) * 0.02,
-      });
-
-      const chosenColor = i % 5 === 0 ? emeraldColor : i % 2 === 0 ? primaryColor : slateColor;
-      colors[i * 3] = chosenColor.r;
-      colors[i * 3 + 1] = chosenColor.g;
-      colors[i * 3 + 2] = chosenColor.b;
+    for (let i = 0; i < NODE_COUNT; i++) {
+      const x = (Math.random() - 0.5) * 130;
+      const y = (Math.random() - 0.5) * 70;
+      const z = (Math.random() - 0.5) * 50;
+      positions[i * 3] = x; positions[i * 3 + 1] = y; positions[i * 3 + 2] = z;
+      const c = palette[i % palette.length];
+      colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+      nodes.push({ x, y, z, vx: (Math.random() - 0.5) * 0.018, vy: (Math.random() - 0.5) * 0.018 });
     }
 
-    const pointsGeometry = new THREE.BufferGeometry();
-    pointsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    pointsGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const pointsGeo = new THREE.BufferGeometry();
+    pointsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    pointsGeo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
 
-    const pointsMaterial = new THREE.PointsMaterial({
-      size: 3.2,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending,
+    const pointsMat = new THREE.PointsMaterial({
+      size: 3.5, vertexColors: true, transparent: true,
+      opacity: 0.88, blending: THREE.AdditiveBlending, sizeAttenuation: true,
     });
-
-    const pointsMesh = new THREE.Points(pointsGeometry, pointsMaterial);
+    const pointsMesh = new THREE.Points(pointsGeo, pointsMat);
     scene.add(pointsMesh);
 
-    // Build dynamic connecting line lattice
-    const maxLines = (nodeCount * (nodeCount - 1)) / 2;
-    const linePositions = new Float32Array(maxLines * 6);
-    const lineColors = new Float32Array(maxLines * 6);
-
-    const lineGeometry = new THREE.BufferGeometry();
-    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-    lineGeometry.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.25,
-      blending: THREE.AdditiveBlending,
+    const maxLines = (NODE_COUNT * (NODE_COUNT - 1)) / 2;
+    const linePos  = new Float32Array(maxLines * 6);
+    const lineCol  = new Float32Array(maxLines * 6);
+    const lineGeo  = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+    lineGeo.setAttribute('color',    new THREE.BufferAttribute(lineCol, 3));
+    const lineMat  = new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending,
     });
-
-    const linesMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+    const linesMesh = new THREE.LineSegments(lineGeo, lineMat);
     scene.add(linesMesh);
 
-    // Mouse Parallax
-    let targetMouseX = 0;
-    let targetMouseY = 0;
-    let currentMouseX = 0;
-    let currentMouseY = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      targetMouseX = (e.clientX / window.innerWidth - 0.5) * 6;
-      targetMouseY = (e.clientY / window.innerHeight - 0.5) * 4;
+    let targetMX = 0, targetMY = 0, currentMX = 0, currentMY = 0;
+    const onMouseMove = (e: MouseEvent) => {
+      targetMX = (e.clientX / window.innerWidth  - 0.5) * 7;
+      targetMY = (e.clientY / window.innerHeight - 0.5) * 4.5;
     };
+    window.addEventListener('mousemove', onMouseMove);
 
-    window.addEventListener('mousemove', handleMouseMove);
+    let scrollY = window.scrollY;
+    const onScroll = () => { scrollY = window.scrollY; };
+    window.addEventListener('scroll', onScroll, { passive: true } as AddEventListenerOptions);
 
-    // IntersectionObserver to pause when out of view
     let isVisible = true;
-    const observer = new IntersectionObserver(([entry]) => {
-      isVisible = entry.isIntersecting;
-    });
+    const observer = new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; });
     observer.observe(container);
 
-    // Animation Loop
     let animationFrameId: number;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-
       if (!isVisible) return;
 
-      // Parallax easing
-      currentMouseX += (targetMouseX - currentMouseX) * 0.05;
-      currentMouseY += (targetMouseY - currentMouseY) * 0.05;
+      currentMX += (targetMX - currentMX) * 0.05;
+      currentMY += (targetMY - currentMY) * 0.05;
 
-      camera.position.x = currentMouseX;
-      camera.position.y = -currentMouseY;
+      const sf = scrollY * 0.018;
+      camera.position.x = currentMX;
+      camera.position.y = -currentMY - sf * 0.4;
+      camera.position.z = 90 + sf * 1.2;
       camera.lookAt(0, 0, 0);
 
-      // Node movement
-      const posAttr = pointsGeometry.attributes.position as THREE.BufferAttribute;
-      const posArray = posAttr.array as Float32Array;
-
-      for (let i = 0; i < nodeCount; i++) {
-        nodesData[i].x += nodesData[i].vx;
-        nodesData[i].y += nodesData[i].vy;
-
-        if (Math.abs(nodesData[i].x) > 60) nodesData[i].vx *= -1;
-        if (Math.abs(nodesData[i].y) > 35) nodesData[i].vy *= -1;
-
-        posArray[i * 3] = nodesData[i].x;
-        posArray[i * 3 + 1] = nodesData[i].y;
+      const posArr = (pointsGeo.attributes.position as THREE.BufferAttribute).array as Float32Array;
+      for (let i = 0; i < NODE_COUNT; i++) {
+        nodes[i].x += nodes[i].vx;
+        nodes[i].y += nodes[i].vy;
+        if (Math.abs(nodes[i].x) > 65) nodes[i].vx *= -1;
+        if (Math.abs(nodes[i].y) > 38) nodes[i].vy *= -1;
+        posArr[i * 3]     = nodes[i].x;
+        posArr[i * 3 + 1] = nodes[i].y;
       }
-      posAttr.needsUpdate = true;
+      (pointsGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
 
-      // Dynamic connections between nearby nodes
-      let lineVertexIndex = 0;
-      const linePosAttr = lineGeometry.attributes.position as THREE.BufferAttribute;
-      const linePosArray = linePosAttr.array as Float32Array;
-      const lineColAttr = lineGeometry.attributes.color as THREE.BufferAttribute;
-      const lineColArray = lineColAttr.array as Float32Array;
-
-      const connectionDistance = 24;
-
-      for (let i = 0; i < nodeCount; i++) {
-        for (let j = i + 1; j < nodeCount; j++) {
-          const dx = nodesData[i].x - nodesData[j].x;
-          const dy = nodesData[i].y - nodesData[j].y;
-          const dz = nodesData[i].z - nodesData[j].z;
+      let vi = 0;
+      const lp = (lineGeo.attributes.position as THREE.BufferAttribute).array as Float32Array;
+      const lc = (lineGeo.attributes.color    as THREE.BufferAttribute).array as Float32Array;
+      for (let i = 0; i < NODE_COUNT; i++) {
+        for (let j = i + 1; j < NODE_COUNT; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dz = nodes[i].z - nodes[j].z;
           const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-          if (dist < connectionDistance) {
-            linePosArray[lineVertexIndex * 3] = nodesData[i].x;
-            linePosArray[lineVertexIndex * 3 + 1] = nodesData[i].y;
-            linePosArray[lineVertexIndex * 3 + 2] = nodesData[i].z;
-
-            linePosArray[(lineVertexIndex + 1) * 3] = nodesData[j].x;
-            linePosArray[(lineVertexIndex + 1) * 3 + 1] = nodesData[j].y;
-            linePosArray[(lineVertexIndex + 1) * 3 + 2] = nodesData[j].z;
-
-            const alpha = 1 - dist / connectionDistance;
-            lineColArray[lineVertexIndex * 3] = 0.06 * alpha;
-            lineColArray[lineVertexIndex * 3 + 1] = 0.38 * alpha;
-            lineColArray[lineVertexIndex * 3 + 2] = 1.0 * alpha;
-
-            lineColArray[(lineVertexIndex + 1) * 3] = 0.06 * alpha;
-            lineColArray[(lineVertexIndex + 1) * 3 + 1] = 0.38 * alpha;
-            lineColArray[(lineVertexIndex + 1) * 3 + 2] = 1.0 * alpha;
-
-            lineVertexIndex += 2;
+          if (dist < CONN_DIST) {
+            const t = dist / CONN_DIST;
+            const r = C_PRIMARY.r * (1 - t) + C_EMERALD.r * t;
+            const g = C_PRIMARY.g * (1 - t) + C_EMERALD.g * t;
+            const b = C_PRIMARY.b * (1 - t) + C_EMERALD.b * t;
+            lp[vi * 3] = nodes[i].x; lp[vi * 3 + 1] = nodes[i].y; lp[vi * 3 + 2] = nodes[i].z;
+            lp[(vi + 1) * 3] = nodes[j].x; lp[(vi + 1) * 3 + 1] = nodes[j].y; lp[(vi + 1) * 3 + 2] = nodes[j].z;
+            lc[vi * 3] = r; lc[vi * 3 + 1] = g; lc[vi * 3 + 2] = b;
+            lc[(vi + 1) * 3] = r; lc[(vi + 1) * 3 + 1] = g; lc[(vi + 1) * 3 + 2] = b;
+            vi += 2;
           }
         }
       }
+      lineGeo.setDrawRange(0, vi);
+      (lineGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+      (lineGeo.attributes.color    as THREE.BufferAttribute).needsUpdate = true;
 
-      lineGeometry.setDrawRange(0, lineVertexIndex);
-      linePosAttr.needsUpdate = true;
-      lineColAttr.needsUpdate = true;
-
-      pointsMesh.rotation.y += 0.0004;
-      linesMesh.rotation.y += 0.0004;
-
+      pointsMesh.rotation.y += 0.0003;
+      linesMesh.rotation.y  += 0.0003;
       renderer.render(scene, camera);
     };
-
     animate();
 
-    // Resize Handler
     const handleResize = () => {
       if (!container) return;
-      const newWidth = container.clientWidth;
-      const newHeight = container.clientHeight;
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
+      const w = container.clientWidth, h = container.clientHeight;
+      camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
     };
-
     window.addEventListener('resize', handleResize);
 
-    // Clean Up
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', handleResize);
       observer.disconnect();
-
-      pointsGeometry.dispose();
-      pointsMaterial.dispose();
-      lineGeometry.dispose();
-      lineMaterial.dispose();
+      pointsGeo.dispose(); pointsMat.dispose();
+      lineGeo.dispose(); lineMat.dispose();
       renderer.dispose();
-
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
   }, []);
 
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 pointer-events-none overflow-hidden opacity-60 dark:opacity-80 transition-opacity"
+      className="absolute inset-0 pointer-events-none overflow-hidden opacity-55 dark:opacity-80 transition-opacity duration-700"
       aria-hidden="true"
     />
   );
