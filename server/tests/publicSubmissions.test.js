@@ -65,7 +65,19 @@ jest.mock('../src/modules/jobs/models/Job', () => ({
   findByIdAndUpdate: async () => { mockState.job.applicationCount++; },
 }));
 jest.mock('../src/shared/services/emailService', () => ({ sendMail: jest.fn(async () => ({ sent: false })) }));
-jest.mock('../src/shared/config/cloudinary', () => ({ cloudinary: { uploader: { upload_stream: (_options, callback) => ({ end: () => callback(null, { secure_url: 'https://example.test/fixture.pdf' }) }) } } }));
+const mockResumeId = '666666666666666666666666';
+jest.mock('../src/shared/services/resumeStorage', () => {
+  const { Readable } = require('stream');
+  return {
+    isValidId: id => /^[a-f0-9]{24}$/i.test(id),
+    idFromUrl: () => null,
+    saveResume: jest.fn(async () => ({ id: '666666666666666666666666', size: 17 })),
+    statResume: jest.fn(async id => (id === '666666666666666666666666' ? { length: 16 } : null)),
+    openResume: jest.fn(() => Readable.from([Buffer.from('%PDF-1.4\nFixture')])),
+    readResume: jest.fn(async () => Buffer.from('%PDF-1.4\nFixture')),
+    deleteResume: jest.fn(async () => {}),
+  };
+});
 jest.mock('../src/shared/services/dashboardCache', () => ({ invalidateDashboardCache: async () => {} }));
 jest.mock('../src/modules/crm/services/externalCrmService', () => ({ syncLead: async () => null }));
 jest.mock('../src/shared/services/jobHiringService', () => ({ onHired: jest.fn() }));
@@ -85,6 +97,7 @@ for (const type of ['Contact', 'Assessment', 'Appointment', 'Download']) app.pos
 app.get('/api/forms/submissions', forms.getSubmissions);
 app.post('/api/jobs/:jobId/apply', applications.submitApplication);
 app.post('/api/jobs/upload-resume', require('multer')({ storage: require('multer').memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }).single('resume'), applications.uploadResume);
+app.get('/api/jobs/resumes/:id', applications.downloadResume);
 app.get('/api/applications', applications.listApplications);
 app.post('/api/subscribers/subscribe', validate(schemas.subscriber), subscribers.subscribe);
 app.get('/api/subscribers', subscribers.listSubscribers);
@@ -178,15 +191,19 @@ test('closed jobs cannot accept applications', async () => {
   await request(app).post(`/api/jobs/${mockJobId}/apply`).send(application()).expect(404);
 });
 
-test('resume upload rejects a renamed non-PDF and returns the uploaded URL for a PDF', async () => {
+test('resume upload rejects a renamed non-PDF and returns our own viewable URL for a PDF', async () => {
   await request(app).post('/api/jobs/upload-resume').attach('resume', Buffer.from('not a PDF'), 'fake.pdf').expect(400);
-  const keys = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
-  const previous = keys.map(key => process.env[key]);
-  keys.forEach(key => { process.env[key] = 'fixture-only'; });
-  try {
-    const response = await request(app).post('/api/jobs/upload-resume').attach('resume', Buffer.from('%PDF-1.4\nFixture only'), 'fixture.pdf').expect(200);
-    expect(response.body.data.url).toBe('https://example.test/fixture.pdf');
-  } finally { keys.forEach((key, index) => { if (previous[index] === undefined) delete process.env[key]; else process.env[key] = previous[index]; }); }
+  const response = await request(app).post('/api/jobs/upload-resume').attach('resume', Buffer.from('%PDF-1.4\nFixture only'), 'fixture.pdf').expect(200);
+  expect(response.body.data.url).toMatch(new RegExp(`^https?://[^/]+/api/jobs/resumes/${mockResumeId}$`));
+});
+
+test('a stored resume streams back as a PDF and unknown resumes are 404', async () => {
+  const response = await request(app).get(`/api/jobs/resumes/${mockResumeId}`).expect(200);
+  expect(response.headers['content-type']).toContain('application/pdf');
+  expect(response.headers['cache-control']).toContain('no-store');
+  expect(Buffer.from(response.body).toString()).toContain('%PDF');
+  await request(app).get('/api/jobs/resumes/aaaaaaaaaaaaaaaaaaaaaaaa').expect(404);
+  await request(app).get('/api/jobs/resumes/not-a-resume-id').expect(404);
 });
 
 test('appointment/download validation and newsletter normalization', () => {

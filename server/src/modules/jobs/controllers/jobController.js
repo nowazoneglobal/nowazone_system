@@ -2,6 +2,7 @@ const Job = require('../models/Job');
 const Application = require('../models/Application');
 const Resume = require('../../hr/models/Resume');
 const { AppError } = require('../../../shared/middleware/errorHandler');
+const resumeStorage = require('../../../shared/services/resumeStorage');
 
 let OpenAI;
 try { OpenAI = require('openai'); } catch { OpenAI = null; }
@@ -76,6 +77,7 @@ exports.submitProfile = async (req, res, next) => {
       experience,
       notes,
       fileUrl: resumeUrl,
+      filePublicId: resumeStorage.idFromUrl(resumeUrl) || undefined,
     });
 
     const io = req.app.get('io');

@@ -33,6 +33,9 @@ router.post('/public/submit-profile', jobCtrl.submitProfile);
 // Protected
 router.use(protect);
 
+// Staff: open a stored resume PDF (must precede '/:id')
+router.get('/resumes/:id', restrictTo(...HR_ROLES), appCtrl.downloadResume);
+
 // Client: my job applications
 router.get('/applications/mine', appCtrl.listMyApplications);
 

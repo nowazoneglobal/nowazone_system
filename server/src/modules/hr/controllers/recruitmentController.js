@@ -7,6 +7,15 @@ const { cloudinary } = require('../../../shared/config/cloudinary');
 const emailService   = require('../../../shared/services/emailService');
 const { addEmailJob } = require('../../../shared/queues/emailQueue');
 const resumeParser   = require('../services/resumeParserService');
+const resumeStorage  = require('../../../shared/services/resumeStorage');
+const { sendStoredResume } = require('../../../shared/middleware/resumeDelivery');
+
+/** Absolute origin of this API, used to build resume links that survive in the DB. */
+const apiOrigin = (req) => {
+  const configured = (process.env.PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+  if (configured) return configured;
+  return `${req.protocol}://${req.get('host')}`;
+};
 
 // ── Jobs ──────────────────────────────────────────────────────────────────────
 
@@ -95,9 +104,21 @@ exports.createResume = async (req, res, next) => {
     let fileUrl      = undefined;
     let filePublicId = undefined;
 
-    if (req.file) {
-      fileUrl      = req.file.path;
-      filePublicId = req.file.filename;
+    if (req.file?.buffer) {
+      if (req.file.buffer.subarray(0, 5).toString() !== '%PDF-') {
+        return next(new AppError('Please upload a valid PDF resume', 400));
+      }
+      try {
+        const stored = await resumeStorage.saveResume(req.file.buffer, {
+          originalName: req.file.originalname,
+          applicant:    applicantName,
+        });
+        filePublicId = stored.id;
+        fileUrl      = `${apiOrigin(req)}/api/hr/resumes/file/${stored.id}`;
+      } catch (error) {
+        console.error('[Resume] storage failure:', error.message);
+        return next(new AppError('Resume uploads are temporarily unavailable. Please try again later.', 503));
+      }
     }
 
     const resume = await Resume.create({
@@ -126,14 +147,21 @@ exports.createResume = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+/** GET /hr/resumes/file/:id — stream a stored resume PDF to authorized staff. */
+exports.downloadResume = sendStoredResume;
+
 exports.deleteResume = async (req, res, next) => {
   try {
     const resume = await Resume.findById(req.params.id);
     if (!resume) return next(new AppError('Resume not found', 404));
 
     if (resume.filePublicId) {
-      // Resume PDFs are stored as Cloudinary `raw` resources.
-      await cloudinary.uploader.destroy(resume.filePublicId, { resource_type: 'raw' }).catch(() => {});
+      // Files created after the migration live in GridFS; older ones are Cloudinary `raw` assets.
+      if (resumeStorage.isValidId(resume.filePublicId)) {
+        await resumeStorage.deleteResume(resume.filePublicId);
+      } else {
+        await cloudinary.uploader.destroy(resume.filePublicId, { resource_type: 'raw' }).catch(() => {});
+      }
     }
 
     await resume.deleteOne();
@@ -177,9 +205,15 @@ exports.parseResume = async (req, res, next) => {
   try {
     const resume = await Resume.findById(req.params.id);
     if (!resume) return next(new AppError('Resume not found', 404));
-    if (!resume.fileUrl) return next(new AppError('No resume file attached', 400));
+    if (!resume.fileUrl && !resume.filePublicId) return next(new AppError('No resume file attached', 400));
 
-    const parsed = await resumeParser.parseFromUrl(resume.fileUrl);
+    const storedId = resumeStorage.isValidId(resume.filePublicId)
+      ? resume.filePublicId
+      : resumeStorage.idFromUrl(resume.fileUrl);
+
+    const parsed = storedId && await resumeStorage.statResume(storedId)
+      ? await resumeParser.parseFromBuffer(await resumeStorage.readResume(storedId))
+      : await resumeParser.parseFromUrl(resume.fileUrl);
 
     resume.parsedData  = parsed;
     resume.skills      = parsed.skills      || resume.skills;

@@ -3,6 +3,7 @@ const multer  = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { cloudinary } = require('../../../shared/config/cloudinary');
 const { protect, restrictTo } = require('../../../shared/middleware/auth');
+const { AppError } = require('../../../shared/middleware/errorHandler');
 
 const employeeController    = require('../controllers/employeeController');
 const attendanceController  = require('../controllers/attendanceController');
@@ -23,15 +24,17 @@ const photoStorage = new CloudinaryStorage({
 const photoUpload = multer({ storage: photoStorage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // ── Multer: resume PDFs ────────────────────────────────────────────────────────
-const resumeStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async () => ({
-    folder:        'hr/resumes',
-    resource_type: 'raw',
-    allowed_formats: ['pdf'],
-  }),
+// Resumes are kept in our own database (GridFS), not Cloudinary: Cloudinary
+// blocks PDF delivery per product environment, which broke every resume link.
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) =>
+    cb(file.mimetype === 'application/pdf' ? null : new AppError('Please upload a PDF resume', 400), file.mimetype === 'application/pdf'),
 });
-const resumeUpload = multer({ storage: resumeStorage, limits: { fileSize: 10 * 1024 * 1024 } });
+const resumeUploadMiddleware = (req, res, next) =>
+  resumeUpload.single('resume')(req, res, (error) =>
+    next(error ? new AppError(error.code === 'LIMIT_FILE_SIZE' ? 'Resume must be no larger than 10 MB' : error.message, 400) : undefined));
 
 // ── Multer: employee documents (PDF/images) ────────────────────────────────────
 const employeeDocStorage = new CloudinaryStorage({
@@ -109,8 +112,9 @@ router
 router
   .route('/resumes')
   .get(recruitmentController.getResumes)
-  .post(resumeUpload.single('resume'), recruitmentController.createResume);
+  .post(resumeUploadMiddleware, recruitmentController.createResume);
 
+router.get('/resumes/file/:id',   recruitmentController.downloadResume);
 router.patch('/resumes/:id/status',  recruitmentController.updateResumeStatus);
 router.post('/resumes/:id/parse',    recruitmentController.parseResume);
 router.delete('/resumes/:id',        recruitmentController.deleteResume);

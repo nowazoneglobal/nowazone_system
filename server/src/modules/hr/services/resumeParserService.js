@@ -42,18 +42,28 @@ const fetchBuffer = (url) =>
 /**
  * Parse a resume PDF from a URL and extract structured data via OpenAI.
  *
- * @param {string} fileUrl  - Public URL of the PDF (Cloudinary)
+ * @param {string} fileUrl  - Public URL of the PDF (legacy Cloudinary asset)
  * @returns {Promise<Object>} Parsed data object
  */
 const parseFromUrl = async (fileUrl) => {
+  if (!fileUrl) throw new Error('No resume file is attached to this record');
+  // 1. Download PDF, then parse the bytes
+  return parseFromBuffer(await fetchBuffer(fileUrl));
+};
+
+/**
+ * Parse a resume PDF from its bytes (files stored in our own database).
+ *
+ * @param {Buffer} buffer - PDF contents
+ * @returns {Promise<Object>} Parsed data object
+ */
+const parseFromBuffer = async (buffer) => {
   if (!pdfParse) {
     throw new Error('pdf-parse is not installed. Run: npm install pdf-parse');
   }
+  if (!buffer?.length) throw new Error('The stored resume file is empty');
 
-  // 1. Download PDF
-  const buffer = await fetchBuffer(fileUrl);
-
-  // 2. Extract text
+  // Extract text
   const { text: rawText } = await pdfParse(buffer);
 
   if (!rawText || rawText.trim().length < 50) {
@@ -142,4 +152,4 @@ const basicExtract = (text) => {
   };
 };
 
-module.exports = { parseFromUrl };
+module.exports = { parseFromUrl, parseFromBuffer };

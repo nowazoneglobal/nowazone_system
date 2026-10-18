@@ -2,7 +2,8 @@ const Application = require('../models/Application');
 const Job = require('../models/Job');
 const { AppError } = require('../../../shared/middleware/errorHandler');
 const { onHired } = require('../../../shared/services/jobHiringService');
-const { cloudinary } = require('../../../shared/config/cloudinary');
+const resumeStorage = require('../../../shared/services/resumeStorage');
+const { sendStoredResume } = require('../../../shared/middleware/resumeDelivery');
 const { randomUUID } = require('crypto');
 const { application: applicationSchema } = require('../../../shared/schemas/publicSubmissionSchemas');
 const { fingerprint, checkReplay, notifyStaff, emitNotifications, sendReceipt } = require('../../../shared/services/publicSubmissionService');
@@ -36,21 +37,35 @@ exports.getApplication = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+/** Absolute origin of this API, used to build resume links that survive in the DB. */
+const apiOrigin = (req) => {
+  const configured = (process.env.PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+  if (configured) return configured;
+  return `${req.protocol}://${req.get('host')}`;
+};
+
 exports.uploadResume = async (req, res, next) => {
   try {
     if (!req.file?.buffer || req.file.buffer.subarray(0, 5).toString() !== '%PDF-') {
       return next(new AppError('Please upload a valid PDF resume', 400));
     }
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    let stored;
+    try {
+      stored = await resumeStorage.saveResume(req.file.buffer, {
+        originalName: req.file.originalname,
+        source: 'job-application',
+        requestId: randomUUID(),
+      });
+    } catch (error) {
+      console.error('[Resume] storage failure:', error.message);
       return next(new AppError('Resume uploads are temporarily unavailable. Please try again later.', 503));
     }
-    const uploaded = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream({ folder: 'jobs/resumes', resource_type: 'raw', public_id: `${randomUUID()}.pdf` }, (error, result) => error ? reject(error) : resolve(result));
-      stream.end(req.file.buffer);
-    });
-    res.status(200).json({ status: 'success', data: { url: uploaded.secure_url } });
+    res.status(200).json({ status: 'success', data: { url: `${apiOrigin(req)}/api/jobs/resumes/${stored.id}` } });
   } catch (err) { next(err); }
 };
+
+/** GET /jobs/resumes/:id — stream a stored resume PDF to authorized staff. */
+exports.downloadResume = sendStoredResume;
 
 /** GET /jobs/applications/mine — list applications for the authenticated user. */
 exports.listMyApplications = async (req, res, next) => {
