@@ -12,10 +12,6 @@ const trackingLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-  message: { status: 'fail', message: 'Too many requests. Please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
