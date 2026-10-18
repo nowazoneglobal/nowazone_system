@@ -8,9 +8,23 @@ export function apiUrl(path: string): string {
   return `${API_BASE}${p}`;
 }
 
-/** OAuth redirect must match the current site origin (and provider app settings). */
+/**
+ * Absolute OAuth redirect_uri. It must byte-for-byte match the redirect/callback
+ * URL registered in the provider's developer console. Prefer an explicit
+ * VITE_<PROVIDER>_REDIRECT_URI override (set in .env) so the value stays correct
+ * regardless of which host/port/subdomain the SPA is served from; otherwise fall
+ * back to the current site origin so local development keeps working.
+ *
+ * Note: do NOT append query parameters (e.g. ?provider=github) — GitHub requires
+ * the redirect_uri to match the registered callback URL exactly, so the provider
+ * is carried via the OAuth `state` parameter instead.
+ */
 export function oauthRedirectUri(provider: 'linkedin' | 'github'): string {
-  const origin = window.location.origin;
-  if (provider === 'github') return `${origin}/portal?provider=github`;
-  return `${origin}/portal`;
+  const env = ((import.meta as any).env || {}) as Record<string, string | undefined>;
+  const override =
+    provider === 'github'
+      ? env.VITE_GITHUB_REDIRECT_URI
+      : env.VITE_LINKEDIN_REDIRECT_URI;
+  if (override) return override;
+  return `${window.location.origin}/portal`;
 }

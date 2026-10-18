@@ -690,10 +690,14 @@ class AuthService {
       if (!clientId || !clientSecret) {
         throw new AppError('GitHub sign-in is not configured', 503);
       }
+      // GitHub requires redirect_uri to exactly match the registered callback
+      // URL (extra query parameters are rejected with "redirect_uri is not
+      // associated with this application"), so keep this a clean path and let
+      // the OAuth `state` parameter identify the provider on return.
       const redirectUri = resolveOAuthRedirectUri(
         tokenOrCode.redirect_uri,
         process.env.GITHUB_REDIRECT_URI,
-        '/portal?provider=github'
+        '/portal'
       );
       const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
