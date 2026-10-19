@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, X, ClipboardList, Mail, Phone, FileText,
   ChevronRight, Download, Eye, CheckCircle, XCircle,
-  Calendar, Briefcase, User, MessageSquare,
+  Calendar, Briefcase, User, MessageSquare, Loader2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/lib/api';
@@ -62,6 +62,27 @@ export default function ApplicationsPage() {
   const [notes, setNotes]                 = useState('');
   const [savingNotes, setSavingNotes]     = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const blobUrlRef = useRef<string | null>(null);
+
+  const openResume = async (url: string) => {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+    setResumeLoading(true);
+    try {
+      const response = await api.get(url, { responseType: 'blob', baseURL: '' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      blobUrlRef.current = blobUrl;
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      toast.error('Could not load resume. You may not have permission or the file no longer exists.');
+    } finally {
+      setResumeLoading(false);
+    }
+  };
 
   useEffect(() => {
     api.get('/jobs?limit=100').then(({ data }) => {
@@ -344,17 +365,21 @@ export default function ApplicationsPage() {
 
                 {/* Resume download */}
                 {(selected.resumeUrl || (selected as any).fileUrl) && (
-                  <a
-                    href={selected.resumeUrl || (selected as any).fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl border transition-all hover:bg-[var(--surface-muted)] text-sm font-medium"
+                  <button
+                    onClick={() => {
+                      const url = selected.resumeUrl || (selected as any).fileUrl;
+                      if (url) openResume(url);
+                    }}
+                    disabled={resumeLoading}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl border transition-all hover:bg-[var(--surface-muted)] text-sm font-medium cursor-pointer disabled:opacity-50"
                     style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
                   >
-                    <FileText size={16} style={{ color: 'var(--accent)' }} />
-                    View Resume (PDF)
-                    <Download size={13} className="ml-auto" style={{ color: 'var(--text-muted)' }} />
-                  </a>
+                    {resumeLoading
+                      ? <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent)' }} />
+                      : <FileText size={16} style={{ color: 'var(--accent)' }} />}
+                    {resumeLoading ? 'Opening...' : 'View Resume (PDF)'}
+                    {!resumeLoading && <Download size={13} className="ml-auto" style={{ color: 'var(--text-muted)' }} />}
+                  </button>
                 )}
 
                 {/* Status actions — hidden for hired (final state) */}

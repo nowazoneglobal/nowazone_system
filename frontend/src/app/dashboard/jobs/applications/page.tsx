@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Search, Star, ChevronDown, Mail, Phone, Calendar, Briefcase, Eye, X } from 'lucide-react';
+import { Users, Search, Star, ChevronDown, Mail, Phone, Calendar, Briefcase, Eye, X, FileText, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'react-toastify';
 
@@ -50,6 +50,33 @@ export default function ApplicationsPage() {
   const [statusFilter, setStatus] = useState('');
   const [total, setTotal]         = useState(0);
   const [selected, setSelected]   = useState<Application | null>(null);
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const blobUrlRef = useRef<string | null>(null);
+
+  const openResume = async (url: string) => {
+    // Revoke any previously created blob URL to free memory
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+    setResumeLoading(true);
+    try {
+      const response = await api.get(url, {
+        responseType: 'blob',
+        // Strip the base URL prefix if the stored URL is absolute so axios
+        // doesn't double-prefix it.
+        baseURL: '',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      blobUrlRef.current = blobUrl;
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      toast.error('Could not load resume. You may not have permission or the file no longer exists.');
+    } finally {
+      setResumeLoading(false);
+    }
+  };
 
   const fetchApps = useCallback(async () => {
     try {
@@ -303,7 +330,19 @@ export default function ApplicationsPage() {
               <div>
                   <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Update Status</label>
                 {selected.coverLetter && <section className="mb-4"><h3>Cover letter / portfolio</h3><p className="whitespace-pre-wrap break-words">{selected.coverLetter}</p></section>}
-                {selected.resumeUrl?.startsWith('https://') && <a href={selected.resumeUrl} target="_blank" rel="noopener noreferrer" className="block mb-4">View resume PDF</a>}
+                {selected.resumeUrl && (
+                  <button
+                    onClick={() => openResume(selected.resumeUrl!)}
+                    disabled={resumeLoading}
+                    className="flex items-center gap-2 px-4 py-2 mb-4 rounded-xl border text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50 cursor-pointer"
+                    style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    {resumeLoading
+                      ? <Loader2 size={15} className="animate-spin" />
+                      : <FileText size={15} style={{ color: 'var(--accent)' }} />}
+                    {resumeLoading ? 'Opening...' : 'View Resume (PDF)'}
+                  </button>
+                )}
                 {selected.status === 'hired' ? (
                   <p className="text-sm py-2" style={{ color: 'var(--text-muted)' }}>Hired — no further changes allowed.</p>
                 ) : (
